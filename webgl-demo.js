@@ -79,12 +79,13 @@ function main() {
         },
       };            
     const buffers = initBuffers(gl);
-    const texture = loadTexture(gl, "cubetexture.png");
+    const floortexture = loadTexture(gl, "floortexture.png");
+    const walltexture = loadTexture(gl, "walltexture.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
         Zpos+=zspeed/10
         gravity()
-        drawScene(gl, programInfo, buffers, texture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items);
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
