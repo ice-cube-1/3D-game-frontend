@@ -1,4 +1,4 @@
-function drawScene(gl, programInfo, buffers, texture, cameraRotationX, cameraRotationY, xpos, ypos, items) {
+function drawScene(gl, programInfo, buffers, texture, cameraRotationX, cameraRotationY, xpos, ypos, zpos, items) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -11,9 +11,9 @@ function drawScene(gl, programInfo, buffers, texture, cameraRotationX, cameraRot
     const projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
     const modelViewMatrix = mat4.create();
-    mat4.rotate(modelViewMatrix, modelViewMatrix, cameraRotationY, [1,0,0])
+    mat4.rotate(modelViewMatrix, modelViewMatrix, cameraRotationY*1.5, [1,0,0])
     mat4.rotate(modelViewMatrix, modelViewMatrix, cameraRotationX*4, [0,1,0])
-    mat4.translate(modelViewMatrix, modelViewMatrix, [xpos, 0, ypos],);
+    mat4.translate(modelViewMatrix, modelViewMatrix, [xpos, -zpos, ypos],);
     const normalMatrix = mat4.create();
     mat4.invert(normalMatrix, modelViewMatrix);
     mat4.transpose(normalMatrix, normalMatrix);

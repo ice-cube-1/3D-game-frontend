@@ -1,12 +1,31 @@
 import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
 
-const hitbox = 2;
-const items = [[-4,0,-4],[4,0,-4],[-4,0,4],[4,0,4],
-                [-2,-2,-4],[-4,-2,-4],[2,-2,-4],[4,-2,-4],
-                [-2,-2,-2],[-4,-2,-2],[2,-2,-2],[4,-2,-2],
-                [-2,-2,2],[-4,-2,2],[2,-2,2],[4,-2,2],
-                [-2,-2,4],[-4,-2,4],[2,-2,4],[4,-2,4]]
+const hitbox = 0.5;
+const items = [[-4,4,-4],[4,4,-4],[-4,4,4],[4,4,4],
+                [-2,2,-4],[-4,2,-4],[2,2,-4],[4,2,-4],
+                [-2,2,-2],[-4,2,-2],[2,2,-2],[4,2,-2],
+                [-2,2,2],[-4,2,2],[2,2,2],[4,2,2],
+                [-2,2,4],[-4,2,4],[2,2,4],[4,2,4]];
+for (var i = -20; i<=20; i+=2) {
+    for (var j = -20; j<=20; j+=2) {
+        items.push([i, 0, j])
+    }
+    items.push([i,2,-20])
+    items.push([i,2,20])
+    items.push([i,4,-20])
+    items.push([i,4,20])
+    items.push([-20,2,i])
+    items.push([20,2,i])
+    items.push([-20,4,i])
+    items.push([20,4,i])
+}
+
+let Xpos = 0;
+let Ypos = 0;
+let Zpos = 5;
+let speed = 0.5;
+let zspeed = 0;
 
 
 main();
@@ -63,7 +82,9 @@ function main() {
     const texture = loadTexture(gl, "cubetexture.png");
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
-        drawScene(gl, programInfo, buffers, texture, mousePos.x, mousePos.y, Xpos, Ypos, items);
+        Zpos+=zspeed/10
+        gravity()
+        drawScene(gl, programInfo, buffers, texture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
@@ -72,9 +93,6 @@ function main() {
         const pos = getMousePosition(e, canvas);
         mousePos = pos;
     });
-    let Xpos = 0;
-    let Ypos = 0;
-    let speed = 0.5;
     $(document).keydown(function (e) {
         let rightVector = { x: Math.cos(mousePos.x*4), y: Math.sin(mousePos.x*4) };
         let forwardVector = { x: -Math.sin(mousePos.x*4), y: Math.cos(mousePos.x*4) };
@@ -111,13 +129,19 @@ function main() {
                     Ypos = tempY
                 }
                 break;
+            case 32: // space
+                if (zspeed == 0) {
+                    zspeed = 2
+                }
+                break;
         }
     });
 }
 
 function checkNotCollision(playerX,playerY) {
     for (var i = 0; i < items.length; i++) {
-        if (items[i][1] == 0) {
+        if (items[i][1] <= Math.ceil(Zpos) && items[i][1] >= Math.ceil(Zpos) - 3) {
+            console.log(items[i])
             var circleDistance = {x: Math.abs(items[i][0] + playerX), y: Math.abs(items[i][2] + playerY)}
             console.log(circleDistance)
             if (circleDistance.x > (1 + hitbox)) { continue; }
@@ -186,4 +210,15 @@ function isPowerOf2(value) {
     const x = (event.clientX - rect.left) / rect.width * 2 - 1;
     const y = (event.clientY - rect.top) / rect.height * 2 - 1;
     return { x, y };
+}
+function gravity() {
+    var floor = [Math.round(Xpos / 2) * 2, Math.ceil(Zpos - 5), Math.ceil(Ypos / 2) * 2];
+    for (var i = 0; i < items.length; i++) {
+        if (items[i][0] === floor[0] && items[i][1] === floor[1] && items[i][2] === floor[2]) {
+            zspeed = 0;
+            Zpos = Math.ceil(Zpos);
+            return;
+        }
+    } 
+    zspeed -= 0.08;
 }
