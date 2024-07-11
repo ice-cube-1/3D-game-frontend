@@ -2,7 +2,12 @@ import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
 
 const hitbox = 2;
-const items = [[-4,0,-6],[4,0,-6]]
+const items = [[-4,0,-4],[4,0,-4],[-4,0,4],[4,0,4],
+                [-2,-2,-4],[-4,-2,-4],[2,-2,-4],[4,-2,-4],
+                [-2,-2,-2],[-4,-2,-2],[2,-2,-2],[4,-2,-2],
+                [-2,-2,2],[-4,-2,2],[2,-2,2],[4,-2,2],
+                [-2,-2,4],[-4,-2,4],[2,-2,4],[4,-2,4]]
+
 
 main();
 function main() {
@@ -112,14 +117,16 @@ function main() {
 
 function checkNotCollision(playerX,playerY) {
     for (var i = 0; i < items.length; i++) {
-        var circleDistance = {x: Math.abs(items[i][0] + playerX), y: Math.abs(items[i][2] + playerY)}
-        console.log(circleDistance)
-        if (circleDistance.x > (1 + hitbox)) { continue; }
-        if (circleDistance.y > (1 + hitbox)) { continue; }
-        if (circleDistance.x <= 1) { return false; } 
-        if (circleDistance.y <= 1) { return false; }
-        var cornerDistance_sq = (circleDistance.x - 1)**2 + (circleDistance.y - 1)**2;
-        if (cornerDistance_sq <= (hitbox**2)) {return false}
+        if (items[i][1] == 0) {
+            var circleDistance = {x: Math.abs(items[i][0] + playerX), y: Math.abs(items[i][2] + playerY)}
+            console.log(circleDistance)
+            if (circleDistance.x > (1 + hitbox)) { continue; }
+            if (circleDistance.y > (1 + hitbox)) { continue; }
+            if (circleDistance.x <= 1) { return false; } 
+            if (circleDistance.y <= 1) { return false; }
+            var cornerDistance_sq = (circleDistance.x - 1)**2 + (circleDistance.y - 1)**2;
+            if (cornerDistance_sq <= (hitbox**2)) {return false}
+        }
     }
     return true
 }

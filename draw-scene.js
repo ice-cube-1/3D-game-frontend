@@ -11,8 +11,8 @@ function drawScene(gl, programInfo, buffers, texture, cameraRotationX, cameraRot
     const projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
     const modelViewMatrix = mat4.create();
-    mat4.rotate(modelViewMatrix, modelViewMatrix, cameraRotationX*4, [0,1,0])
     mat4.rotate(modelViewMatrix, modelViewMatrix, cameraRotationY, [1,0,0])
+    mat4.rotate(modelViewMatrix, modelViewMatrix, cameraRotationX*4, [0,1,0])
     mat4.translate(modelViewMatrix, modelViewMatrix, [xpos, 0, ypos],);
     const normalMatrix = mat4.create();
     mat4.invert(normalMatrix, modelViewMatrix);
