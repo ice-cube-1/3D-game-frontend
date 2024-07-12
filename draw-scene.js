@@ -1,4 +1,4 @@
-function drawScene(gl, programInfo, buffers, floortexture, walltexture, cameraRotationX, cameraRotationY, xpos, ypos, zpos, items) {
+function drawScene(gl, programInfo, buffers, floortexture, walltexture, cameraRotationX, cameraRotationY, xpos, ypos, zpos, items, attackPos) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -38,6 +38,12 @@ function drawScene(gl, programInfo, buffers, floortexture, walltexture, cameraRo
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
         mat4.translate(modelViewMatrix, modelViewMatrix, items[i].map(value => -value));
     }
+    const fixedModelViewMatrix = mat4.create();
+    mat4.translate(fixedModelViewMatrix, fixedModelViewMatrix, [-1, 0, -1]);
+    mat4.rotate(fixedModelViewMatrix, fixedModelViewMatrix, attackPos*4, [1,0,0])
+    mat4.scale(fixedModelViewMatrix, fixedModelViewMatrix, [0.1, 1, 0.1]);
+    gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, fixedModelViewMatrix);
+    gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
 }
 
 function setPositionAttribute(gl, buffers, programInfo) {

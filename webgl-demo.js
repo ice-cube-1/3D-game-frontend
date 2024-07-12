@@ -26,6 +26,8 @@ let Ypos = 0;
 let Zpos = 5;
 let speed = 0.5;
 let zspeed = 0;
+let attackPos = 1.6;
+let attackSpeed = 0;
 
 
 main();
@@ -84,8 +86,14 @@ function main() {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
         Zpos+=zspeed/10
+        attackPos-=attackSpeed
+        if (attackPos <= 0.7) {
+            attackPos = 1.6;
+            attackSpeed = 0;
+        }
+        console.log(attackPos)
         gravity()
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items);
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
@@ -93,6 +101,11 @@ function main() {
     canvas.addEventListener('mousemove', (e) => {
         const pos = getMousePosition(e, canvas);
         mousePos = pos;
+    });
+    addEventListener("click", (event) => {
+        if (attackSpeed == 0) {
+            attackSpeed = 0.02
+        }
     });
     $(document).keydown(function (e) {
         let rightVector = { x: Math.cos(mousePos.x*4), y: Math.sin(mousePos.x*4) };
