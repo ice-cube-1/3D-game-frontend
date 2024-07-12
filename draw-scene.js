@@ -1,4 +1,4 @@
-function drawScene(gl, programInfo, buffers, floortexture, walltexture, sword, cameraRotationX, cameraRotationY, xpos, ypos, zpos, items, attackPos) {
+function drawScene(gl, programInfo, buffers, floortexture, walltexture, sword, cameraRotationX, cameraRotationY, xpos, ypos, zpos, items, attackPos, players, character) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -37,6 +37,17 @@ function drawScene(gl, programInfo, buffers, floortexture, walltexture, sword, c
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
         mat4.translate(modelViewMatrix, modelViewMatrix, items[i].map(value => -value));
+    }
+    gl.bindTexture(gl.TEXTURE_2D, character)
+    for (let i = 0; i < players.length; i++) {
+        mat4.translate(modelViewMatrix, modelViewMatrix,  [players[i].x, players[i].z-2, players[i].y]);
+        mat4.scale(modelViewMatrix, modelViewMatrix, [1/1.2, 2, 1/1.2])
+        mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].rotation, [0,1,0])
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+        mat4.rotate(modelViewMatrix, modelViewMatrix, -players[i].rotation, [0,1,0])
+        mat4.scale(modelViewMatrix, modelViewMatrix, [1.2, 0.5, 1.2])
+        mat4.translate(modelViewMatrix, modelViewMatrix, [-players[i].x, -players[i].z+2, -players[i].y]);
     }
     gl.bindTexture(gl.TEXTURE_2D, sword);
     const fixedModelViewMatrix = mat4.create();

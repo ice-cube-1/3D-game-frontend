@@ -20,6 +20,7 @@ for (var i = -20; i<=20; i+=2) {
     items.push([-20,4,i])
     items.push([20,4,i])
 }
+const players = [{x: 0, y: 10, z: 5, rotation: 0}, {x: 10, y: 10, z: 5, rotation: 0.5}, {x: -10, y: 0, z: 5, rotation: -1}]
 
 let Xpos = 0;
 let Ypos = 0;
@@ -84,6 +85,7 @@ function main() {
     const floortexture = loadTexture(gl, "floortexture.png");
     const walltexture = loadTexture(gl, "walltexture.png")
     const weapontexture = loadTexture(gl, "sword.png")
+    const character = loadTexture(gl, "character.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
         Zpos+=zspeed/10
@@ -92,9 +94,8 @@ function main() {
             attackPos = 1.6;
             attackSpeed = 0;
         }
-        console.log(attackPos)
-        gravity()
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos);
+        gravity(Xpos,Ypos,Zpos)
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos, players, character);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
@@ -115,7 +116,7 @@ function main() {
             case 87: // W key - Move forward
                 var tempX = Xpos+forwardVector.x * speed;
                 var tempY = Ypos+forwardVector.y * speed;
-                if (checkNotCollision(tempX, tempY)) {
+                if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
                     Xpos = tempX;
                     Ypos = tempY
                 }
@@ -123,7 +124,7 @@ function main() {
             case 65: // A key - Move left
                 var tempX = Xpos+rightVector.x * speed;
                 var tempY = Ypos+rightVector.y * speed;
-                if (checkNotCollision(tempX, tempY)) {
+                if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
                     Xpos = tempX;
                     Ypos = tempY
                 }
@@ -131,7 +132,7 @@ function main() {
             case 83: // S key - Move backward
                 var tempX = Xpos-forwardVector.x * speed;
                 var tempY = Ypos-forwardVector.y * speed;
-                if (checkNotCollision(tempX, tempY)) {
+                if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
                     Xpos = tempX;
                     Ypos = tempY
                 }
@@ -139,7 +140,7 @@ function main() {
             case 68: // D key - Move right
                 var tempX = Xpos-rightVector.x * speed;
                 var tempY = Ypos-rightVector.y * speed;
-                if (checkNotCollision(tempX, tempY)) {
+                if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
                     Xpos = tempX;
                     Ypos = tempY
                 }
@@ -153,12 +154,22 @@ function main() {
     });
 }
 
+function playerPlayerCollision(x,y,z) {
+    for (var i = 0; i<players.length; i++) {
+        console.log(x,y,z,players[i])
+        if (Math.abs(z-players[i].z) < 4) {
+            if ((-x-players[i].x)**2 + (-y-players[i].y)**2 <= (hitbox*4)**2) {
+                return false
+            }
+        }
+    }
+    return true
+}
+
 function checkNotCollision(playerX,playerY) {
     for (var i = 0; i < items.length; i++) {
         if (items[i][1] <= Math.ceil(Zpos) && items[i][1] >= Math.ceil(Zpos) - 3) {
-            console.log(items[i])
             var circleDistance = {x: Math.abs(items[i][0] + playerX), y: Math.abs(items[i][2] + playerY)}
-            console.log(circleDistance)
             if (circleDistance.x > (1 + hitbox)) { continue; }
             if (circleDistance.y > (1 + hitbox)) { continue; }
             if (circleDistance.x <= 1) { return false; } 
@@ -228,7 +239,7 @@ function isPowerOf2(value) {
     const y = (event.clientY - rect.top) / rect.height * 2 - 1;
     return { x, y };
 }
-function gravity() {
+function gravity(Xpos,Ypos,Zpos) {
     var floor = [Math.round(Xpos / 2) * 2, Math.ceil(Zpos - 5), Math.ceil(Ypos / 2) * 2];
     for (var i = 0; i < items.length; i++) {
         if (items[i][0] === floor[0] && items[i][1] === floor[1] && items[i][2] === floor[2]) {
