@@ -20,7 +20,7 @@ for (var i = -20; i<=20; i+=2) {
     items.push([-20,4,i])
     items.push([20,4,i])
 }
-const players = [{x: 0, y: 10, z: 5, rotation: 0}, {x: 10, y: 10, z: 5, rotation: 0.5}, {x: -10, y: 0, z: 5, rotation: -1}]
+var players = [{x: 0, y: 10, z: 5, rotation: 0, zspeed: 0}, {x: 10, y: 10, z: 5, rotation: 0.5, zspeed: 0}, {x: -10, y: 0, z: 5, rotation: -1, zspeed:0}]
 
 let Xpos = 0;
 let Ypos = 0;
@@ -94,7 +94,11 @@ function main() {
             attackPos = 1.6;
             attackSpeed = 0;
         }
-        gravity(Xpos,Ypos,Zpos)
+        Zpos, zspeed = gravity(Xpos,Ypos,Zpos,zspeed)
+        for (var i = 0; i<players.length; i++) {
+            players[i].z+=players[i].zspeed/10
+            players[i].z, players[i].zspeed = gravity(players[i].z, players[i].y, players[i].z,players[i].zspeed)
+        }
         drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos, players, character);
         requestAnimationFrame(render);
     }
@@ -107,6 +111,11 @@ function main() {
     addEventListener("click", (event) => {
         if (attackSpeed == 0) {
             attackSpeed = 0.02
+            for (var i = 0; i<players.length; i++) {
+                if ((-Xpos-players[i].x)**2 + (-Ypos-players[i].y)**2 <= (hitbox*8)**2 && (Math.abs(Zpos-players[i].z) < 4)) {
+                    players[i].zspeed+=1
+                }
+            }
         }
     });
     $(document).keydown(function (e) {
@@ -156,7 +165,6 @@ function main() {
 
 function playerPlayerCollision(x,y,z) {
     for (var i = 0; i<players.length; i++) {
-        console.log(x,y,z,players[i])
         if (Math.abs(z-players[i].z) < 4) {
             if ((-x-players[i].x)**2 + (-y-players[i].y)**2 <= (hitbox*4)**2) {
                 return false
@@ -239,14 +247,15 @@ function isPowerOf2(value) {
     const y = (event.clientY - rect.top) / rect.height * 2 - 1;
     return { x, y };
 }
-function gravity(Xpos,Ypos,Zpos) {
+function gravity(Xpos,Ypos,Zpos,zspeed) {
     var floor = [Math.round(Xpos / 2) * 2, Math.ceil(Zpos - 5), Math.ceil(Ypos / 2) * 2];
     for (var i = 0; i < items.length; i++) {
         if (items[i][0] === floor[0] && items[i][1] === floor[1] && items[i][2] === floor[2]) {
             zspeed = 0;
             Zpos = Math.ceil(Zpos);
-            return;
+            return Zpos, zspeed;
         }
     } 
     zspeed -= 0.08;
+    return Zpos, zspeed;
 }
