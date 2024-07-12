@@ -114,6 +114,14 @@ function main() {
             for (var i = 0; i<players.length; i++) {
                 if ((-Xpos-players[i].x)**2 + (-Ypos-players[i].y)**2 <= (hitbox*8)**2 && (Math.abs(Zpos-players[i].z) < 4)) {
                     players[i].zspeed+=1
+                    let vec = {x: -Math.sin(mousePos.x*4), y: Math.cos(mousePos.x*4)}
+                    var tempX = players[i].x-vec.x * speed;
+                    var tempY = players[i].y-vec.y * speed;
+                    if (checkNotCollision(tempX, tempY)) {
+                        players[i].x = tempX;
+                        players[i].y = tempY;
+                        console.log("here")
+                    }
                 }
             }
         }
