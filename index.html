@@ -12,12 +12,17 @@
       <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
     <script src="webgl-demo.js" type="module"></script>
     <style>
-      #textOverlay {
+      #coordinates, #chat {
           position: absolute;
-          top: 20px;
-          left: 20px;
           font-size: 24px;
+          left: 20px;
           color: white;
+      }
+      #coordinates {
+        top: 20px;
+      }
+      #chat {
+        top: 50px;
       }
   </style>
   
@@ -25,6 +30,7 @@
 
   <body>
     <canvas id="glcanvas" width="1920" height="1080" style="cursor: none;"></canvas>
-    <div id="textOverlay">Hello, WebGL!</div>
+    <div id="coordinates">Hello, WebGL!</div>
+    <div id="chat">Hi</div>
   </body>
 </html>

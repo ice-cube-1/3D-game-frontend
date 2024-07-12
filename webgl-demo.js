@@ -29,6 +29,8 @@ let speed = 0.5;
 let zspeed = 0;
 let attackPos = 1.6;
 let attackSpeed = 0;
+var messages = []
+var chatFocussed = false
 
 main();
 function main() {
@@ -87,7 +89,9 @@ function main() {
     const character = loadTexture(gl, "character.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
-        document.getElementById("textOverlay").textContent = `X: ${Math.round(Xpos)}, Y: ${Math.round(Ypos)}, Z: ${Math.floor(Zpos/2)}`;
+        document.getElementById("coordinates").textContent = `X: ${Math.round(Xpos)}, Y: ${Math.round(Ypos)}, Z: ${Math.floor((Zpos-4)/2)}`;
+        document.getElementById("chat").innerHTML = messages.join("<br/>");
+        console.log(messages.join("\n"))
         Zpos+=zspeed/10
         attackPos-=attackSpeed
         if (attackPos <= 0.7) {
@@ -120,7 +124,6 @@ function main() {
                     if (checkNotCollision(tempX, tempY)) {
                         players[i].x = tempX;
                         players[i].y = tempY;
-                        console.log("here")
                     }
                 }
             }
@@ -129,44 +132,60 @@ function main() {
     $(document).keydown(function (e) {
         let rightVector = { x: Math.cos(mousePos.x*4), y: Math.sin(mousePos.x*4) };
         let forwardVector = { x: -Math.sin(mousePos.x*4), y: Math.cos(mousePos.x*4) };
+        if (!chatFocussed) {
         switch (e.which) {
-            case 87: // W key - Move forward
-                var tempX = Xpos+forwardVector.x * speed;
-                var tempY = Ypos+forwardVector.y * speed;
-                if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
-                    Xpos = tempX;
-                    Ypos = tempY
-                }
-                break;
-            case 65: // A key - Move left
-                var tempX = Xpos+rightVector.x * speed;
-                var tempY = Ypos+rightVector.y * speed;
-                if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
-                    Xpos = tempX;
-                    Ypos = tempY
-                }
-                break;
-            case 83: // S key - Move backward
-                var tempX = Xpos-forwardVector.x * speed;
-                var tempY = Ypos-forwardVector.y * speed;
-                if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
-                    Xpos = tempX;
-                    Ypos = tempY
-                }
-                break;
-            case 68: // D key - Move right
-                var tempX = Xpos-rightVector.x * speed;
-                var tempY = Ypos-rightVector.y * speed;
-                if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
-                    Xpos = tempX;
-                    Ypos = tempY
-                }
-                break;
-            case 32: // space
-                if (zspeed == 0) {
-                    zspeed = 2
-                }
-                break;
+                case 87: // W key - Move forward
+                    var tempX = Xpos+forwardVector.x * speed;
+                    var tempY = Ypos+forwardVector.y * speed;
+                    if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
+                        Xpos = tempX;
+                        Ypos = tempY
+                    }
+                    break;
+                case 65: // A key - Move left
+                    var tempX = Xpos+rightVector.x * speed;
+                    var tempY = Ypos+rightVector.y * speed;
+                    if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
+                        Xpos = tempX;
+                        Ypos = tempY
+                    }
+                    break;
+                case 83: // S key - Move backward
+                    var tempX = Xpos-forwardVector.x * speed;
+                    var tempY = Ypos-forwardVector.y * speed;
+                    if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
+                        Xpos = tempX;
+                        Ypos = tempY
+                    }
+                    break;
+                case 68: // D key - Move right
+                    var tempX = Xpos-rightVector.x * speed;
+                    var tempY = Ypos-rightVector.y * speed;
+                    if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX,tempY,Zpos)) {
+                        Xpos = tempX;
+                        Ypos = tempY
+                    }
+                    break;
+                case 32: // space
+                    if (zspeed == 0) {
+                        zspeed = 2
+                    }
+                    break;
+                case 84: // T
+                    chatFocussed = true;
+                    messages.push("")
+                    if (messages.length >= 3) {
+                        messages = messages.slice(messages.length-3,messages.length)
+                    }
+            }
+        } else {
+            if (e.which == 13) {
+                chatFocussed = false;
+            } else if (e.which == 8) {
+                messages[messages.length-1] = messages[messages.length-1].substring(0, messages[messages.length-1].length - 1);
+            } else {
+                messages[messages.length-1] += String.fromCharCode(e.which).toLowerCase()
+            }
         }
     });
 }
