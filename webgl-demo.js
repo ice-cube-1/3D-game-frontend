@@ -83,6 +83,7 @@ function main() {
     const buffers = initBuffers(gl);
     const floortexture = loadTexture(gl, "floortexture.png");
     const walltexture = loadTexture(gl, "walltexture.png")
+    const weapontexture = loadTexture(gl, "sword.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
         Zpos+=zspeed/10
@@ -93,7 +94,7 @@ function main() {
         }
         console.log(attackPos)
         gravity()
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos);
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
@@ -197,6 +198,8 @@ function loadTexture(gl, url) {
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
     const pixel = new Uint8Array([0,0,255,255]);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.enable(gl.BLEND);
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
     const image = new Image();
     image.onload = () => {
