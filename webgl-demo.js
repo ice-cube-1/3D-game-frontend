@@ -30,7 +30,6 @@ let zspeed = 0;
 let attackPos = 1.6;
 let attackSpeed = 0;
 
-
 main();
 function main() {
     const canvas = document.querySelector("#glcanvas")
@@ -88,6 +87,7 @@ function main() {
     const character = loadTexture(gl, "character.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
+        document.getElementById("textOverlay").textContent = `X: ${Math.round(Xpos)}, Y: ${Math.round(Ypos)}, Z: ${Math.floor(Zpos/2)}`;
         Zpos+=zspeed/10
         attackPos-=attackSpeed
         if (attackPos <= 0.7) {
