@@ -143,7 +143,7 @@ function main() {
                 tempY -= rightVector.y * speed;
                 break;   
         }
-        if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX, tempY, Zpos)) {
+        if (checkNotCollision(tempX, tempY, Zpos-3, Zpos) && playerPlayerCollision(tempX, tempY, Zpos)) {
             Xpos = tempX;
             Ypos = tempY
         }
@@ -175,7 +175,7 @@ function main() {
                     let vec = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) }
                     var tempX = players[i].x - vec.x * speed;
                     var tempY = players[i].y - vec.y * speed;
-                    if (checkNotCollision(tempX, tempY)) {
+                    if (checkNotCollision(tempX, tempY, players[i].z-3, players[i].z)) {
                         players[i].x = tempX;
                         players[i].y = tempY;
                     }
@@ -232,9 +232,9 @@ function playerPlayerCollision(x, y, z) {
     return true
 }
 
-function checkNotCollision(playerX, playerY) {
+function checkNotCollision(playerX, playerY, Zmin, Zmax) {
     for (var i = 0; i < items.length; i++) {
-        if (items[i][1] <= Math.ceil(Zpos) && items[i][1] >= Math.ceil(Zpos) - 3) {
+        if (items[i][1] <= Math.ceil(Zmax) && items[i][1] >= Math.ceil(Zmin)) {
             var circleDistance = { x: Math.abs(items[i][0] + playerX), y: Math.abs(items[i][2] + playerY) }
             if (circleDistance.x > (1 + hitbox)) { continue; }
             if (circleDistance.y > (1 + hitbox)) { continue; }
@@ -305,18 +305,13 @@ function getMousePosition(event, target) {
     const y = (event.clientY - rect.top) / rect.height * 2 - 1;
     return { x, y };
 }
+
 function gravity(Xpos, Ypos, Zpos, zspeed) {
-    var floor = [Math.round(-Xpos / 2) * 2, Math.ceil(Zpos-4), Math.ceil(-(Ypos+1) / 2) * 2];
-    var landed = false
-    for (var i = 0; i < items.length; i++) {
-        if (items[i][0] === floor[0] && items[i][1] === floor[1] && items[i][2] === floor[2]) {
-            zspeed = 0;
-            Zpos = floor[1];
-            landed = true;
-        }
+    if (!checkNotCollision(Xpos, Ypos, Math.ceil(Zpos-4), Math.ceil(Zpos-4))) {
+        zspeed = 0;
+        Zpos = Math.ceil(Zpos);
+    } else {
+        zspeed-=0.08;
     }
-    if (!landed) {
-        zspeed -= 0.08;
-    }
-    return Zpos, zspeed;
+    return Zpos, zspeed
 }
