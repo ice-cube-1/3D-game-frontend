@@ -202,24 +202,29 @@ function main() {
                         zspeed = 2
                     }
                     break;
-                case 84: // T
-                    chatFocussed = true;
-                    messages.push("")
-                    if (messages.length >= 3) {
-                        messages = messages.slice(messages.length - 3, messages.length)
-                    }
             }
         } else {
             if (e.which == 13) {
                 chatFocussed = false;
             } else if (e.which == 8) {
                 messages[messages.length - 1] = messages[messages.length - 1].substring(0, messages[messages.length - 1].length - 1);
-            } else {
-                messages[messages.length - 1] += String.fromCharCode(e.which).toLowerCase()
             }
         }
     });
 }
+
+$(document).keypress(function (e) {
+    console.log(e.which, chatFocussed)
+    if (chatFocussed) {
+        messages[messages.length - 1] += String.fromCharCode(e.which)
+    } else if (e.which == 116) {
+        chatFocussed = true;
+        messages.push("")
+        if (messages.length >= 15) {
+            messages = messages.slice(messages.length - 15, messages.length)
+        }
+    }
+})
 
 function playerPlayerCollision(x, y, z) {
     for (var i = 0; i < players.length; i++) {
