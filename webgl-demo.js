@@ -27,7 +27,7 @@ for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
     items.push([-gridsize / 2, 4, i])
 }
 
-var players = [{ x: 0, y: 10, z: 5, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 5, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 5, rotation: -1, zspeed: 0 }]
+var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0 }]
 
 let Xpos = 0;
 let Ypos = 0;
@@ -96,7 +96,7 @@ function main() {
     const character = loadTexture(gl, "character.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
-        document.getElementById("coordinates").textContent = `X: ${Xpos.toFixed(2)}, Y: ${Ypos.toFixed(2)}, Z: ${(Zpos - 4).toFixed(2)}`;
+        document.getElementById("coordinates").textContent = `X: ${Xpos.toFixed(2)}, Y: ${Ypos.toFixed(2)}, Z: ${((Zpos - 5)/2).toFixed(2)}`;
         document.getElementById("chat").innerHTML = messages.join("<br/>");
         if (zspeed != 0) {
             Zpos += zspeed / 10
@@ -294,7 +294,7 @@ function getMousePosition(event, target) {
 }
 
 function gravity(Xpos, Ypos, Zpos, zspeed) {
-    if (!checkNotCollision(Xpos, Ypos, Math.ceil(Zpos - 4), Math.ceil(Zpos - 4)) || !playerPlayerCollision(Xpos, Ypos, Math.ceil(Zpos))) {
+    if (!checkNotCollision(Xpos, Ypos, Math.ceil(Zpos - 5), Math.ceil(Zpos - 5)) || !playerPlayerCollision(Xpos, Ypos, Math.ceil(Zpos - 1))) {
         zspeed = 0;
         Zpos = Math.ceil(Zpos);
     } else {
