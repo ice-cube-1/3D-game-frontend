@@ -3,48 +3,30 @@ import { drawScene } from "./draw-scene.js";
 
 const hitbox = 0.5;
 
-function addmore(i,z,j) {
+function addmore(i, z, j) {
     if (Math.random() < 0.2) {
-        items.push([i,z+2,j]);
-        addmore(i,z+2,j)
-    } 
+        items.push([i, z + 2, j]);
+        addmore(i, z + 2, j)
+    }
 }
 var direction = ''
 const gridsize = 80
 var items = []
-for (var i = -gridsize/2; i< gridsize/2; i+=2) {
-    for (var j = -gridsize/2; j< gridsize/2; j+=2) {
-        items.push([i,0,j]);
-        addmore(i,0,j)
+for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
+    for (var j = -gridsize / 2; j < gridsize / 2; j += 2) {
+        items.push([i, 0, j]);
+        addmore(i, 0, j)
     }
-    items.push([i,2,gridsize/2])
-    items.push([i,4,gridsize/2])
-    items.push([gridsize/2, 2, i])
-    items.push([gridsize/2, 4, i])
-    items.push([i,2,-gridsize/2])
-    items.push([i,4,-gridsize/2])
-    items.push([-gridsize/2, 2, i])
-    items.push([-gridsize/2, 4, i])
+    items.push([i, 2, gridsize / 2])
+    items.push([i, 4, gridsize / 2])
+    items.push([gridsize / 2, 2, i])
+    items.push([gridsize / 2, 4, i])
+    items.push([i, 2, -gridsize / 2])
+    items.push([i, 4, -gridsize / 2])
+    items.push([-gridsize / 2, 2, i])
+    items.push([-gridsize / 2, 4, i])
 }
 
-// const items = [[-4, 4, -4], [4, 4, -4], [-4, 4, 4], [4, 4, 4],
-// [-2, 2, -4], [-4, 2, -4], [2, 2, -4], [4, 2, -4],
-// [-2, 2, -2], [-4, 2, -2], [2, 2, -2], [4, 2, -2],
-// [-2, 2, 2], [-4, 2, 2], [2, 2, 2], [4, 2, 2],
-// [-2, 2, 4], [-4, 2, 4], [2, 2, 4], [4, 2, 4]];
-// for (var i = -20; i <= 20; i += 2) { 
-//     for (var j = -20; j <= 20; j += 2) {
-//         items.push([i, 0, j])
-//     }
-//     items.push([i, 2, -20])
-//     items.push([i, 2, 20])
-//     items.push([i, 4, -20])
-//     items.push([i, 4, 20])
-//     items.push([-20, 2, i])
-//     items.push([20, 2, i])
-//     items.push([-20, 4, i])
-//     items.push([20, 4, i])
-// }
 var players = [{ x: 0, y: 10, z: 5, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 5, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 5, rotation: -1, zspeed: 0 }]
 
 let Xpos = 0;
@@ -114,12 +96,12 @@ function main() {
     const character = loadTexture(gl, "character.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
-        document.getElementById("coordinates").textContent = `X: ${Xpos.toFixed(2)}, Y: ${Ypos.toFixed(2)}, Z: ${(Zpos -4).toFixed(2)}`;
+        document.getElementById("coordinates").textContent = `X: ${Xpos.toFixed(2)}, Y: ${Ypos.toFixed(2)}, Z: ${(Zpos - 4).toFixed(2)}`;
         document.getElementById("chat").innerHTML = messages.join("<br/>");
         if (zspeed != 0) {
             Zpos += zspeed / 10
         } else {
-            Zpos=Math.ceil(Zpos)
+            Zpos = Math.ceil(Zpos)
         }
         let rightVector = { x: Math.cos(mousePos.x * 4), y: Math.sin(mousePos.x * 4) };
         let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
@@ -141,9 +123,9 @@ function main() {
             case 'right':
                 tempX -= rightVector.x * speed;
                 tempY -= rightVector.y * speed;
-                break;   
+                break;
         }
-        if (checkNotCollision(tempX, tempY, Zpos-3, Zpos) && playerPlayerCollision(tempX, tempY, Zpos)) {
+        if (checkNotCollision(tempX, tempY, Zpos - 3, Zpos) && playerPlayerCollision(tempX, tempY, Zpos)) {
             Xpos = tempX;
             Ypos = tempY
         }
@@ -175,7 +157,7 @@ function main() {
                     let vec = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) }
                     var tempX = players[i].x - vec.x * speed;
                     var tempY = players[i].y - vec.y * speed;
-                    if (checkNotCollision(tempX, tempY, players[i].z-3, players[i].z)) {
+                    if (checkNotCollision(tempX, tempY, players[i].z - 3, players[i].z)) {
                         players[i].x = tempX;
                         players[i].y = tempY;
                     }
@@ -183,7 +165,7 @@ function main() {
             }
         }
     });
-    $(document).keyup(function(e) {
+    $(document).keyup(function (e) {
         switch (e.which) {
             case 87: case 65: case 83: case 68:
                 direction = ''
@@ -191,7 +173,7 @@ function main() {
     })
 
     $(document).keydown(function (e) {
-       if (!chatFocussed) {
+        if (!chatFocussed) {
             switch (e.which) {
                 case 87: direction = 'forwards'; break;
                 case 65: direction = 'left'; break;
@@ -312,11 +294,11 @@ function getMousePosition(event, target) {
 }
 
 function gravity(Xpos, Ypos, Zpos, zspeed) {
-    if (!checkNotCollision(Xpos, Ypos, Math.ceil(Zpos-4), Math.ceil(Zpos-4))) {
+    if (!checkNotCollision(Xpos, Ypos, Math.ceil(Zpos - 4), Math.ceil(Zpos - 4)) || !playerPlayerCollision(Xpos, Ypos, Math.ceil(Zpos))) {
         zspeed = 0;
         Zpos = Math.ceil(Zpos);
     } else {
-        zspeed-=0.08;
+        zspeed -= 0.08;
     }
     return Zpos, zspeed
 }
