@@ -1,36 +1,41 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>WebGL Demo</title>
-    <link rel="stylesheet" href="./webgl.css" type="text/css" />
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
-      integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
-      crossorigin="anonymous"
-      defer></script>
-      <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-    <script src="webgl-demo.js" type="module"></script>
-    <style>
-      #coordinates, #chat {
-          position: absolute;
-          font-size: 24px;
-          left: 20px;
-          color: white;
-      }
-      #coordinates {
-        top: 20px;
-      }
-      #chat {
-        top: 50px;
-      }
-  </style>
-  
-  </head>
 
-  <body>
-    <canvas id="glcanvas" width="1920" height="1080" style="cursor: none;"></canvas>
-    <div id="coordinates">Hello, WebGL!</div>
-    <div id="chat">Hi</div>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <title>WebGL Demo</title>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+    integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+    crossorigin="anonymous" defer></script> -->
+  <script src="gl-matrix-min.js"></script>
+  <script src="jquery-3.2.1.min.js"></script>
+  <!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script> -->
+  <script src="webgl-demo.js" type="module"></script>
+  <style>
+    #coordinates,
+    #chat {
+      position: absolute;
+      font-size: 24px;
+      left: 20px;
+      color: white;
+    }
+
+    #coordinates {
+      top: 20px;
+    }
+
+    #chat {
+      top: 50px;
+    }
+  </style>
+
+</head>
+
+<body>
+  <canvas id="glcanvas" width="1920" height="1080" style="cursor: none;"></canvas>
+  <div id="coordinates">Hello, WebGL!</div>
+  <div id="chat">Hi</div>
+</body>
+
 </html>
