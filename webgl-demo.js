@@ -4,14 +4,18 @@ import { drawScene } from "./draw-scene.js";
 const hitbox = 0.5;
 
 function addmore(i, z, j) {
-    if (Math.random() < 0.2) {
+    var x = Math.random()
+    if (x < 0.2) {
         items.push([i, z + 2, j]);
         addmore(i, z + 2, j)
+    } else if (x < 0.25) {
+        weapons.push([i, z+2, j]);
     }
 }
 var direction = ''
 const gridsize = 80
 var items = []
+var weapons = []
 for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
     for (var j = -gridsize / 2; j < gridsize / 2; j += 2) {
         items.push([i, 0, j]);
@@ -26,9 +30,8 @@ for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
     items.push([-gridsize / 2, 2, i])
     items.push([-gridsize / 2, 4, i])
 }
-
 var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0 }]
-
+console.log(weapons)
 let Xpos = 0;
 let Ypos = 0;
 let Zpos = 5;
@@ -38,6 +41,7 @@ let attackPos = 1.6;
 let attackSpeed = 0;
 var messages = []
 var chatFocussed = false
+var frame = 1
 
 main();
 function main() {
@@ -139,7 +143,8 @@ function main() {
             players[i].z += players[i].zspeed / 10
             players[i].z, players[i].zspeed = gravity(players[i].z, players[i].y, players[i].z, players[i].zspeed)
         }
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos, players, character);
+        frame+=1;
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos, players, character, weapons, frame);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
