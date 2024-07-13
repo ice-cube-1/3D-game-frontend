@@ -9,13 +9,12 @@ function addmore(i,z,j) {
         addmore(i,z+2,j)
     } 
 }
-
+var direction = ''
 const gridsize = 80
 var items = []
 for (var i = -gridsize/2; i< gridsize/2; i+=2) {
     for (var j = -gridsize/2; j< gridsize/2; j+=2) {
         items.push([i,0,j]);
-        console.log(items)
         addmore(i,0,j)
     }
     items.push([i,2,gridsize/2])
@@ -51,7 +50,7 @@ var players = [{ x: 0, y: 10, z: 5, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z:
 let Xpos = 0;
 let Ypos = 0;
 let Zpos = 5;
-let speed = 0.5;
+let speed = 0.2;
 let zspeed = 0;
 let attackPos = 1.6;
 let attackSpeed = 0;
@@ -115,10 +114,39 @@ function main() {
     const character = loadTexture(gl, "character.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
-        document.getElementById("coordinates").textContent = `X: ${Xpos.toFixed(2)}, Y: ${Ypos.toFixed(2)}, Z: ${Math.floor((Zpos - 4) / 2)}`;
+        document.getElementById("coordinates").textContent = `X: ${Xpos.toFixed(2)}, Y: ${Ypos.toFixed(2)}, Z: ${(Zpos -4).toFixed(2)}`;
         document.getElementById("chat").innerHTML = messages.join("<br/>");
-        console.log(messages.join("\n"))
-        Zpos += zspeed / 10
+        if (zspeed != 0) {
+            Zpos += zspeed / 10
+        } else {
+            Zpos=Math.ceil(Zpos)
+        }
+        let rightVector = { x: Math.cos(mousePos.x * 4), y: Math.sin(mousePos.x * 4) };
+        let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
+        var tempX = Xpos;
+        var tempY = Ypos;
+        switch (direction) {
+            case 'forwards':
+                tempX += forwardVector.x * speed;
+                tempY += forwardVector.y * speed;
+                break;
+            case 'left':
+                tempX += rightVector.x * speed;
+                tempY += rightVector.y * speed;
+                break;
+            case 'backwards':
+                tempX -= forwardVector.x * speed;
+                tempY -= forwardVector.y * speed;
+                break;
+            case 'right':
+                tempX -= rightVector.x * speed;
+                tempY -= rightVector.y * speed;
+                break;   
+        }
+        if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX, tempY, Zpos)) {
+            Xpos = tempX;
+            Ypos = tempY
+        }
         attackPos -= attackSpeed
         if (attackPos <= 0.7) {
             attackPos = 1.6;
@@ -155,43 +183,20 @@ function main() {
             }
         }
     });
+    $(document).keyup(function(e) {
+        switch (e.which) {
+            case 87: case 65: case 83: case 68:
+                direction = ''
+        }
+    })
+
     $(document).keydown(function (e) {
-        let rightVector = { x: Math.cos(mousePos.x * 4), y: Math.sin(mousePos.x * 4) };
-        let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
-        if (!chatFocussed) {
+       if (!chatFocussed) {
             switch (e.which) {
-                case 87: // W key - Move forward
-                    var tempX = Xpos + forwardVector.x * speed;
-                    var tempY = Ypos + forwardVector.y * speed;
-                    if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX, tempY, Zpos)) {
-                        Xpos = tempX;
-                        Ypos = tempY
-                    }
-                    break;
-                case 65: // A key - Move left
-                    var tempX = Xpos + rightVector.x * speed;
-                    var tempY = Ypos + rightVector.y * speed;
-                    if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX, tempY, Zpos)) {
-                        Xpos = tempX;
-                        Ypos = tempY
-                    }
-                    break;
-                case 83: // S key - Move backward
-                    var tempX = Xpos - forwardVector.x * speed;
-                    var tempY = Ypos - forwardVector.y * speed;
-                    if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX, tempY, Zpos)) {
-                        Xpos = tempX;
-                        Ypos = tempY
-                    }
-                    break;
-                case 68: // D key - Move right
-                    var tempX = Xpos - rightVector.x * speed;
-                    var tempY = Ypos - rightVector.y * speed;
-                    if (checkNotCollision(tempX, tempY) && playerPlayerCollision(tempX, tempY, Zpos)) {
-                        Xpos = tempX;
-                        Ypos = tempY
-                    }
-                    break;
+                case 87: direction = 'forwards'; break;
+                case 65: direction = 'left'; break;
+                case 83: direction = 'backwards'; break;
+                case 68: direction = 'right'; break;
                 case 32: // space
                     if (zspeed == 0) {
                         zspeed = 2
@@ -301,14 +306,17 @@ function getMousePosition(event, target) {
     return { x, y };
 }
 function gravity(Xpos, Ypos, Zpos, zspeed) {
-    var floor = [Math.round(-Xpos / 2) * 2, Math.ceil(Zpos - 5), Math.ceil(-Ypos / 2) * 2];
+    var floor = [Math.round(-Xpos / 2) * 2, Math.ceil(Zpos-4), Math.ceil(-(Ypos+1) / 2) * 2];
+    var landed = false
     for (var i = 0; i < items.length; i++) {
         if (items[i][0] === floor[0] && items[i][1] === floor[1] && items[i][2] === floor[2]) {
             zspeed = 0;
-            Zpos = Math.ceil(Zpos);
-            return Zpos, zspeed;
+            Zpos = floor[1];
+            landed = true;
         }
     }
-    zspeed -= 0.08;
+    if (!landed) {
+        zspeed -= 0.08;
+    }
     return Zpos, zspeed;
 }
