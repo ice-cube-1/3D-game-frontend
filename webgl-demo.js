@@ -31,7 +31,6 @@ for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
     items.push([-gridsize / 2, 4, i])
 }
 var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0 }]
-console.log(weapons)
 let Xpos = 0;
 let Ypos = 0;
 let Zpos = 5;
@@ -42,6 +41,7 @@ let attackSpeed = 0;
 var messages = []
 var chatFocussed = false
 var frame = 1
+var inventory = []
 
 main();
 function main() {
@@ -184,6 +184,7 @@ function main() {
                 case 65: direction = 'left'; break;
                 case 83: direction = 'backwards'; break;
                 case 68: direction = 'right'; break;
+                case 69: interact(); break;
                 case 32: // space
                     if (zspeed == 0) {
                         zspeed = 2
@@ -201,7 +202,6 @@ function main() {
 }
 
 $(document).keypress(function (e) {
-    console.log(e.which, chatFocussed)
     if (chatFocussed) {
         messages[messages.length - 1] += String.fromCharCode(e.which)
     } else if (e.which == 116) {
@@ -306,4 +306,14 @@ function gravity(Xpos, Ypos, Zpos, zspeed) {
         zspeed -= 0.08;
     }
     return Zpos, zspeed
+}
+
+function interact() {
+    for (i = 0; i<weapons.length; i++) {
+        console.log([Math.round(-Xpos/2)*2, Math.round(Zpos - 3), Math.round(-Ypos/2)*2], weapons[i])
+        if (weapons[i][0] == Math.round(-Xpos/2)*2 && weapons[i][1] == Math.round(Zpos - 3) && weapons[i][2] == Math.round(-Ypos/2)*2) {
+            inventory.push(weapons.splice(i,1)[0])
+            messages.push("Picked up item!")
+        }
+    }
 }
