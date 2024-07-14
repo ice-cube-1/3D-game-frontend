@@ -60,10 +60,11 @@ function drawScene(gl, programInfo, buffers, floortexture, walltexture, weaponte
         mat4.rotate(modelViewMatrix, modelViewMatrix, -frame/50, [0,1,0])
         mat4.translate(modelViewMatrix, modelViewMatrix, (weapons[i].coords).map(value => -value))
     }
-    gl.bindTexture(gl.TEXTURE_2D, weapontextures[currentweapon])
     const fixedModelViewMatrix = mat4.create();
+    gl.bindTexture(gl.TEXTURE_2D, weapontextures[currentweapon])
     mat4.translate(fixedModelViewMatrix, fixedModelViewMatrix, [-1, 0, -1]);
     mat4.rotate(fixedModelViewMatrix, fixedModelViewMatrix, attackPos * 4, [1, 0, 0])
+    setNormalAttribute(gl, buffers, programInfo) 
     mat4.scale(fixedModelViewMatrix, fixedModelViewMatrix, [0.01, 1, 0.2]);
     gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, fixedModelViewMatrix);
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
