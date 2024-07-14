@@ -9,7 +9,7 @@ function addmore(i, z, j) {
         items.push([i, z + 2, j]);
         addmore(i, z + 2, j)
     } else if (x < 0.25) {
-        weapons.push([i, z+2, j]);
+        weapons.push({coords: [i, z+2, j], rarity: Math.floor(Math.random()*5)});
     }
 }
 var direction = ''
@@ -42,6 +42,8 @@ var messages = []
 var chatFocussed = false
 var frame = 1
 var inventory = []
+var currentweapon = 0;
+const rarities = ["common","uncommon","rare","epic","legendary"]
 
 main();
 function main() {
@@ -96,7 +98,10 @@ function main() {
     const buffers = initBuffers(gl);
     const floortexture = loadTexture(gl, "floortexture.png");
     const walltexture = loadTexture(gl, "walltexture.png")
-    const weapontexture = loadTexture(gl, "sword.png")
+    var weapontextures = []
+    for (i = 0; i<rarities.length; i++) {
+        weapontextures.push(loadTexture(gl, `sword/${rarities[i]}.png`))
+    }
     const character = loadTexture(gl, "character.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
@@ -144,7 +149,7 @@ function main() {
             players[i].z, players[i].zspeed = gravity(players[i].z, players[i].y, players[i].z, players[i].zspeed)
         }
         frame+=1;
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontexture, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos, players, character, weapons, frame);
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos, players, character, weapons, frame, currentweapon);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
@@ -310,10 +315,17 @@ function gravity(Xpos, Ypos, Zpos, zspeed) {
 
 function interact() {
     for (i = 0; i<weapons.length; i++) {
-        console.log([Math.round(-Xpos/2)*2, Math.round(Zpos - 3), Math.round(-Ypos/2)*2], weapons[i])
-        if (weapons[i][0] == Math.round(-Xpos/2)*2 && weapons[i][1] == Math.round(Zpos - 3) && weapons[i][2] == Math.round(-Ypos/2)*2) {
-            inventory.push(weapons.splice(i,1)[0])
-            messages.push("Picked up item!")
+        if (weapons[i].coords[0] == Math.round(-Xpos/2)*2 && weapons[i].coords[1] == Math.round(Zpos - 3) && weapons[i].coords[2] == Math.round(-Ypos/2)*2) {
+            var item = weapons.splice(i,1)[0]
+            if (inventory.length != 0) {
+                inventory[0].coords = [Math.round(-Xpos/2)*2, Math.round(Zpos-3), Math.round(-Ypos/2)*2]
+                weapons.push(inventory[0])
+                inventory = inventory.splice(1,inventory.length-1)
+            }
+            inventory.push(item)
+            currentweapon = inventory[0].rarity
+            messages.push(`Picked up ${rarities[item.rarity]} item!`)
+            return;
         }
     }
 }

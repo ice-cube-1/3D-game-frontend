@@ -1,4 +1,4 @@
-function drawScene(gl, programInfo, buffers, floortexture, walltexture, sword, cameraRotationX, cameraRotationY, xpos, ypos, zpos, items, attackPos, players, character, weapons, frame) {
+function drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, cameraRotationX, cameraRotationY, xpos, ypos, zpos, items, attackPos, players, character, weapons, frame, currentweapon) {
     gl.clearColor(0.8, 0.9, 1.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -49,17 +49,18 @@ function drawScene(gl, programInfo, buffers, floortexture, walltexture, sword, c
         mat4.scale(modelViewMatrix, modelViewMatrix, [1.2, 0.5, 1.2])
         mat4.translate(modelViewMatrix, modelViewMatrix, [-players[i].x, -players[i].z + 2, -players[i].y]);
     }
-    gl.bindTexture(gl.TEXTURE_2D, sword);
     for (let i = 0; i < weapons.length; i++) {
-        mat4.translate(modelViewMatrix, modelViewMatrix, weapons[i])
-        mat4.rotate(modelViewMatrix, modelViewMatrix, frame/100, [0,1,0])
+        gl.bindTexture(gl.TEXTURE_2D, weapontextures[weapons[i].rarity]);
+        mat4.translate(modelViewMatrix, modelViewMatrix, weapons[i].coords)
+        mat4.rotate(modelViewMatrix, modelViewMatrix, frame/50, [0,1,0])
         mat4.scale(modelViewMatrix, modelViewMatrix, [0.005, 0.5, 0.5])
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
         mat4.scale(modelViewMatrix, modelViewMatrix, [200, 2, 2])
-        mat4.rotate(modelViewMatrix, modelViewMatrix, -frame/100, [0,1,0])
-        mat4.translate(modelViewMatrix, modelViewMatrix, weapons[i].map(value => -value))
+        mat4.rotate(modelViewMatrix, modelViewMatrix, -frame/50, [0,1,0])
+        mat4.translate(modelViewMatrix, modelViewMatrix, (weapons[i].coords).map(value => -value))
     }
+    gl.bindTexture(gl.TEXTURE_2D, weapontextures[currentweapon])
     const fixedModelViewMatrix = mat4.create();
     mat4.translate(fixedModelViewMatrix, fixedModelViewMatrix, [-1, 0, -1]);
     mat4.rotate(fixedModelViewMatrix, fixedModelViewMatrix, attackPos * 4, [1, 0, 0])
