@@ -135,7 +135,7 @@ function main() {
                 tempY -= rightVector.y * speed;
                 break;
         }
-        if (checkNotCollision(tempX, tempY, Zpos - 3, Zpos) && playerPlayerCollision(tempX, tempY, Zpos)) {
+        if (checkNotCollision(tempX, tempY, Zpos - 4, Zpos) && playerPlayerCollision(tempX, tempY, Zpos)) {
             Xpos = tempX;
             Ypos = tempY
         }
