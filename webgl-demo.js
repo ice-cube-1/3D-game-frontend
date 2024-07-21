@@ -30,7 +30,8 @@ for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
     items.push([-gridsize / 2, 2, i])
     items.push([-gridsize / 2, 4, i])
 }
-var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0 }]
+//var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0 }]
+var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }]
 let Xpos = 0;
 let Ypos = 0;
 let Zpos = 5;
@@ -162,7 +163,9 @@ function main() {
         if (attackSpeed == 0) {
             attackSpeed = 0.02
             for (var i = 0; i < players.length; i++) {
-                if ((-Xpos - players[i].x) ** 2 + (-Ypos - players[i].y) ** 2 <= (hitbox * 8) ** 2 && (Math.abs(Zpos - players[i].z) < 4)) {
+                let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
+                let directionVector = makeUnitVector({x: -Xpos - players[i].x, y: -Ypos - players[i].y})
+                if ((-Xpos - players[i].x) ** 2 + (-Ypos - players[i].y) ** 2 <= (hitbox * 8) ** 2 && dotProduct(forwardVector,directionVector) > 0.9) { 
                     players[i].zspeed += 1
                     let vec = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) }
                     var tempX = players[i].x - vec.x * speed;
@@ -328,4 +331,13 @@ function interact() {
             return;
         }
     }
+}
+
+function makeUnitVector(vector) {
+    let magnitude = Math.sqrt(vector.x**2 + vector.y**2)
+    return {x: vector.x/magnitude, y: vector.y/magnitude}
+}
+
+function dotProduct(a,b) {
+    return (a.x*b.x)+(a.y*b.y)
 }
