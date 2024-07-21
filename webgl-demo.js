@@ -5,11 +5,11 @@ const hitbox = 0.5;
 
 function addmore(i, z, j) {
     var x = Math.random()
-    if (x < 0.2) {
+    if (x < 0.1) {
         items.push([i, z + 2, j]);
         addmore(i, z + 2, j)
-    } else if (x < 0.25) {
-        weapons.push({coords: [i, z+2, j], rarity: Math.floor(Math.random()*5)});
+    } else if (x < 0.15) {
+        weapons.push({ coords: [i, z + 2, j], rarity: Math.floor(Math.random() * 5) });
     }
 }
 var direction = ''
@@ -30,21 +30,12 @@ for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
     items.push([-gridsize / 2, 2, i])
     items.push([-gridsize / 2, 4, i])
 }
-//var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0 }]
-var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }]
-let Xpos = 0;
-let Ypos = 0;
-let Zpos = 5;
-let speed = 0.2;
-let zspeed = 0;
-let attackPos = 1.6;
-let attackSpeed = 0;
+var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0 }]
+var player = { x: 0, y: 0, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{ coords: [0, 0], rarity: 0 }] }
 var messages = []
 var chatFocussed = false
 var frame = 1
-var inventory = []
-var currentweapon = 0;
-const rarities = ["common","uncommon","rare","epic","legendary"]
+const rarities = ["common", "uncommon", "rare", "epic", "legendary"]
 
 main();
 function main() {
@@ -100,57 +91,57 @@ function main() {
     const floortexture = loadTexture(gl, "floortexture.png");
     const walltexture = loadTexture(gl, "walltexture.png")
     var weapontextures = []
-    for (i = 0; i<rarities.length; i++) {
+    for (i = 0; i < rarities.length; i++) {
         weapontextures.push(loadTexture(gl, `sword/${rarities[i]}.png`))
     }
     const character = loadTexture(gl, "character.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
-        document.getElementById("coordinates").textContent = `X: ${Xpos.toFixed(2)}, Y: ${Ypos.toFixed(2)}, Z: ${((Zpos - 5)/2).toFixed(2)}`;
+        document.getElementById("coordinates").textContent = `X: ${player.x.toFixed(2)}, Y: ${player.y.toFixed(2)}, Z: ${((player.z - 5) / 2).toFixed(2)}`;
         document.getElementById("chat").innerHTML = messages.join("<br/>");
-        if (zspeed != 0) {
-            Zpos += zspeed / 10
+        if (player.zspeed != 0) {
+            player.z += player.zspeed / 10
         } else {
-            Zpos = Math.ceil(Zpos)
+            player.z = Math.ceil(player.z)
         }
-        let rightVector = { x: Math.cos(mousePos.x * 4), y: Math.sin(mousePos.x * 4) };
-        let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
-        var tempX = Xpos;
-        var tempY = Ypos;
+        let rightVector = { x: Math.cos(mousePos.x * 4) * 0.2, y: Math.sin(mousePos.x * 4) * 0.2 };
+        let forwardVector = { x: -Math.sin(mousePos.x * 4) * 0.2, y: Math.cos(mousePos.x * 4) * 0.2 };
+        var tempX = player.x;
+        var tempY = player.y;
         switch (direction) {
             case 'forwards':
-                tempX += forwardVector.x * speed;
-                tempY += forwardVector.y * speed;
+                tempX += forwardVector.x;
+                tempY += forwardVector.y;
                 break;
             case 'left':
-                tempX += rightVector.x * speed;
-                tempY += rightVector.y * speed;
+                tempX += rightVector.x;
+                tempY += rightVector.y;
                 break;
             case 'backwards':
-                tempX -= forwardVector.x * speed;
-                tempY -= forwardVector.y * speed;
+                tempX -= forwardVector.x;
+                tempY -= forwardVector.y;
                 break;
             case 'right':
-                tempX -= rightVector.x * speed;
-                tempY -= rightVector.y * speed;
+                tempX -= rightVector.x;
+                tempY -= rightVector.y;
                 break;
         }
-        if (checkNotCollision(tempX, tempY, Zpos - 4, Zpos) && playerPlayerCollision(tempX, tempY, Zpos)) {
-            Xpos = tempX;
-            Ypos = tempY
+        if (checkNotCollision(tempX, tempY, player.z - 4, player.z) && playerPlayerCollision(tempX, tempY, player.z)) {
+            player.x = tempX;
+            player.y = tempY
         }
-        attackPos -= attackSpeed
-        if (attackPos <= 0.7) {
-            attackPos = 1.6;
-            attackSpeed = 0;
+        player.weaponPos -= player.attackSpeed
+        if (player.weaponPos <= 0.7) {
+            player.weaponPos = 1.6;
+            player.attackSpeed = 0;
         }
-        Zpos, zspeed = gravity(Xpos, Ypos, Zpos, zspeed)
+        player.z, player.zspeed = gravity(player.x, player.y, player.z, player.zspeed)
         for (var i = 0; i < players.length; i++) {
             players[i].z += players[i].zspeed / 10
             players[i].z, players[i].zspeed = gravity(players[i].z, players[i].y, players[i].z, players[i].zspeed)
         }
-        frame+=1;
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, Xpos, Ypos, Zpos, items, attackPos, players, character, weapons, frame, currentweapon);
+        frame += 1;
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, items, player.weaponPos, players, character, weapons, frame, player.inventory[0].rarity);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
@@ -160,16 +151,16 @@ function main() {
         mousePos = pos;
     });
     addEventListener("click", (event) => {
-        if (attackSpeed == 0) {
-            attackSpeed = 0.02
+        if (player.attackSpeed == 0) {
+            player.attackSpeed = 0.02
             for (var i = 0; i < players.length; i++) {
                 let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
-                let directionVector = makeUnitVector({x: -Xpos - players[i].x, y: -Ypos - players[i].y})
-                if ((-Xpos - players[i].x) ** 2 + (-Ypos - players[i].y) ** 2 <= (hitbox * 8) ** 2 && dotProduct(forwardVector,directionVector) > 0.9) { 
+                let directionVector = makeUnitVector({ x: -player.x - players[i].x, y: -player.y - players[i].y })
+                if ((-player.x - players[i].x) ** 2 + (-player.y - players[i].y) ** 2 <= (hitbox * 8) ** 2 && dotProduct(forwardVector, directionVector) > 0.9) {
                     players[i].zspeed += 1
-                    let vec = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) }
-                    var tempX = players[i].x - vec.x * speed;
-                    var tempY = players[i].y - vec.y * speed;
+                    let vec = { x: -Math.sin(mousePos.x * 4) * 0.2, y: Math.cos(mousePos.x * 4) * 0.2 }
+                    var tempX = players[i].x - vec.x;
+                    var tempY = players[i].y - vec.y;
                     if (checkNotCollision(tempX, tempY, players[i].z - 3, players[i].z)) {
                         players[i].x = tempX;
                         players[i].y = tempY;
@@ -194,8 +185,8 @@ function main() {
                 case 68: direction = 'right'; break;
                 case 69: interact(); break;
                 case 32: // space
-                    if (zspeed == 0) {
-                        zspeed = 2
+                    if (player.zspeed == 0) {
+                        player.zspeed = 2
                     }
                     break;
             }
@@ -306,27 +297,26 @@ function getMousePosition(event, target) {
     return { x, y };
 }
 
-function gravity(Xpos, Ypos, Zpos, zspeed) {
-    if (!checkNotCollision(Xpos, Ypos, Math.ceil(Zpos - 5), Math.ceil(Zpos - 5)) || !playerPlayerCollision(Xpos, Ypos, Math.ceil(Zpos - 1))) {
+function gravity(x, y, z, zspeed) {
+    if (!checkNotCollision(x, y, Math.ceil(z - 5), Math.ceil(z - 5)) || !playerPlayerCollision(x, y, Math.ceil(z - 1))) {
         zspeed = 0;
-        Zpos = Math.ceil(Zpos);
+        z = Math.ceil(z);
     } else {
         zspeed -= 0.08;
     }
-    return Zpos, zspeed
+    return z, zspeed
 }
 
 function interact() {
-    for (i = 0; i<weapons.length; i++) {
-        if (weapons[i].coords[0] == Math.round(-Xpos/2)*2 && weapons[i].coords[1] == Math.round(Zpos - 3) && weapons[i].coords[2] == Math.round(-Ypos/2)*2) {
-            var item = weapons.splice(i,1)[0]
-            if (inventory.length != 0) {
-                inventory[0].coords = [Math.round(-Xpos/2)*2, Math.round(Zpos-3), Math.round(-Ypos/2)*2]
-                weapons.push(inventory[0])
-                inventory = inventory.splice(1,inventory.length-1)
+    for (i = 0; i < weapons.length; i++) {
+        if (weapons[i].coords[0] == Math.round(-player.x / 2) * 2 && weapons[i].coords[1] == Math.round(player.z - 3) && weapons[i].coords[2] == Math.round(-player.y / 2) * 2) {
+            var item = weapons.splice(i, 1)[0]
+            if (player.inventory.length != 0) {
+                player.inventory[0].coords = [Math.round(-player.x / 2) * 2, Math.round(player.z - 3), Math.round(-player.y / 2) * 2]
+                weapons.push(player.inventory[0])
+                player.inventory = player.inventory.splice(1, player.inventory.length - 1)
             }
-            inventory.push(item)
-            currentweapon = inventory[0].rarity
+            player.inventory.push(item)
             messages.push(`Picked up ${rarities[item.rarity]} item!`)
             return;
         }
@@ -334,10 +324,10 @@ function interact() {
 }
 
 function makeUnitVector(vector) {
-    let magnitude = Math.sqrt(vector.x**2 + vector.y**2)
-    return {x: vector.x/magnitude, y: vector.y/magnitude}
+    let magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2)
+    return { x: vector.x / magnitude, y: vector.y / magnitude }
 }
 
-function dotProduct(a,b) {
-    return (a.x*b.x)+(a.y*b.y)
+function dotProduct(a, b) {
+    return (a.x * b.x) + (a.y * b.y)
 }
