@@ -1,5 +1,6 @@
 import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
+import { testTypescript } from "./test.js"
 
 const hitbox = 0.5;
 
@@ -12,6 +13,7 @@ function addmore(i, z, j) {
         weapons.push({ coords: [i, z + 2, j], rarity: Math.floor(Math.random() * 5) });
     }
 }
+testTypescript("hello")
 var direction = ''
 const gridsize = 80
 var items = []
@@ -331,3 +333,4 @@ function makeUnitVector(vector) {
 function dotProduct(a, b) {
     return (a.x * b.x) + (a.y * b.y)
 }
+
