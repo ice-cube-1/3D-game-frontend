@@ -4,7 +4,7 @@ import { testTypescript } from "./test.js"
 
 const hitbox = 0.5;
 
-function addmore(i, z, j) {
+function addmore(i: any, z: any, j: any) {
     var x = Math.random()
     if (x < 0.1) {
         items.push([i, z + 2, j]);
@@ -16,8 +16,8 @@ function addmore(i, z, j) {
 testTypescript("hello")
 var direction = ''
 const gridsize = 80
-var items = []
-var weapons = []
+var items: any = []
+var weapons: any = []
 for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
     for (var j = -gridsize / 2; j < gridsize / 2; j += 2) {
         items.push([i, 0, j]);
@@ -34,15 +34,15 @@ for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
 }
 var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0 }]
 var player = { x: 0, y: 0, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{ coords: [0, 0], rarity: 0 }] }
-var messages = []
+var messages: any = []
 var chatFocussed = false
 var frame = 1
 const rarities = ["common", "uncommon", "rare", "epic", "legendary"]
 
 main();
 function main() {
-    const canvas = document.querySelector("#glcanvas")
-    const gl = canvas.getContext("webgl");
+    const canvas = document.querySelector("#glcanvas") as HTMLCanvasElement;
+    const gl = canvas.getContext("webgl") as WebGLRenderingContext;
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     const vsSource = `
@@ -92,15 +92,17 @@ function main() {
     const buffers = initBuffers(gl);
     const floortexture = loadTexture(gl, "floortexture.png");
     const walltexture = loadTexture(gl, "walltexture.png")
-    var weapontextures = []
+    var weapontextures: any[] = []
     for (i = 0; i < rarities.length; i++) {
         weapontextures.push(loadTexture(gl, `sword/${rarities[i]}.png`))
     }
     const character = loadTexture(gl, "character.png")
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
-        document.getElementById("coordinates").textContent = `X: ${player.x.toFixed(2)}, Y: ${player.y.toFixed(2)}, Z: ${((player.z - 5) / 2).toFixed(2)}`;
-        document.getElementById("chat").innerHTML = messages.join("<br/>");
+        const coords = document.getElementById("coordinates") as HTMLElement
+        coords.textContent = `X: ${player.x.toFixed(2)}, Y: ${player.y.toFixed(2)}, Z: ${((player.z - 5) / 2).toFixed(2)}`;
+        const chat = document.getElementById("chat") as HTMLElement;
+        chat.innerHTML = messages.join("<br/>");
         if (player.zspeed != 0) {
             player.z += player.zspeed / 10
         } else {
@@ -137,10 +139,14 @@ function main() {
             player.weaponPos = 1.6;
             player.attackSpeed = 0;
         }
-        player.z, player.zspeed = gravity(player.x, player.y, player.z, player.zspeed)
+        var fallen = gravity(player.x, player.y, player.z, player.zspeed)
+        player.z = fallen.z;
+        player.zspeed = fallen.zspeed;
         for (var i = 0; i < players.length; i++) {
             players[i].z += players[i].zspeed / 10
-            players[i].z, players[i].zspeed = gravity(players[i].z, players[i].y, players[i].z, players[i].zspeed)
+            fallen = gravity(players[i].z, players[i].y, players[i].z, players[i].zspeed)
+            players[i].z = fallen.z;
+            players[i].zspeed = fallen.zspeed;
         }
         frame += 1;
         drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, items, player.weaponPos, players, character, weapons, frame, player.inventory[0].rarity);
@@ -214,7 +220,7 @@ $(document).keypress(function (e) {
     }
 })
 
-function playerPlayerCollision(x, y, z) {
+function playerPlayerCollision(x: any, y: any, z: any) {
     for (var i = 0; i < players.length; i++) {
         if (Math.abs(z - players[i].z) < 4) {
             if ((-x - players[i].x) ** 2 + (-y - players[i].y) ** 2 <= (hitbox * 4) ** 2) {
@@ -225,7 +231,7 @@ function playerPlayerCollision(x, y, z) {
     return true
 }
 
-function checkNotCollision(playerX, playerY, Zmin, Zmax) {
+function checkNotCollision(playerX: any, playerY: any, Zmin: any, Zmax: any) {
     for (var i = 0; i < items.length; i++) {
         if (items[i][1] <= Math.ceil(Zmax) && items[i][1] >= Math.ceil(Zmin)) {
             var circleDistance = { x: Math.abs(items[i][0] + playerX), y: Math.abs(items[i][2] + playerY) }
@@ -240,7 +246,7 @@ function checkNotCollision(playerX, playerY, Zmin, Zmax) {
     return true
 }
 
-function initShaderProgram(gl, vsSource, fsSource) {
+function initShaderProgram(gl: any, vsSource: any, fsSource: any) {
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
     const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
     const shaderProgram = gl.createProgram();
@@ -250,14 +256,14 @@ function initShaderProgram(gl, vsSource, fsSource) {
     return shaderProgram;
 }
 
-function loadShader(gl, type, source) {
+function loadShader(gl: any, type: any, source: any) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
     return shader;
 }
 
-function loadTexture(gl, url) {
+function loadTexture(gl: any, url: any) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     const level = 0;
@@ -287,11 +293,11 @@ function loadTexture(gl, url) {
     return texture;
 }
 
-function isPowerOf2(value) {
+function isPowerOf2(value: any) {
     return (value & (value - 1)) === 0;
 }
 
-function getMousePosition(event, target) {
+function getMousePosition(event: any, target: any) {
     target = target || event.target;
     const rect = target.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width * 2 - 1;
@@ -299,14 +305,14 @@ function getMousePosition(event, target) {
     return { x, y };
 }
 
-function gravity(x, y, z, zspeed) {
+function gravity(x: any, y: any, z: any, zspeed: any) {
     if (!checkNotCollision(x, y, Math.ceil(z - 5), Math.ceil(z - 5)) || !playerPlayerCollision(x, y, Math.ceil(z - 1))) {
         zspeed = 0;
         z = Math.ceil(z);
     } else {
         zspeed -= 0.08;
     }
-    return z, zspeed
+    return {z, zspeed}
 }
 
 function interact() {
@@ -325,12 +331,12 @@ function interact() {
     }
 }
 
-function makeUnitVector(vector) {
+function makeUnitVector(vector: any) {
     let magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2)
     return { x: vector.x / magnitude, y: vector.y / magnitude }
 }
 
-function dotProduct(a, b) {
+function dotProduct(a: any, b: any) {
     return (a.x * b.x) + (a.y * b.y)
 }
 
