@@ -1,12 +1,19 @@
-function initBuffers(gl: any) {
-  const positionBuffer = initPositionBuffer(gl);
-  const textureCoordBuffer = initTextureBuffer(gl);
-  const indexBuffer = initIndexBuffer(gl);
-  const normalBuffer = initNormalBuffer(gl);
+type Buffers = {
+  position: WebGLBuffer;
+  normal: WebGLBuffer;
+  textureCoord: WebGLBuffer;
+  indices: WebGLBuffer;
+}
+
+function initBuffers(gl: WebGLRenderingContext) {
+  const positionBuffer = initPositionBuffer(gl) as WebGLBuffer;
+  const textureCoordBuffer = initTextureBuffer(gl) as WebGLBuffer;
+  const indexBuffer = initIndexBuffer(gl) as WebGLBuffer;
+  const normalBuffer = initNormalBuffer(gl) as WebGLBuffer;
   return { position: positionBuffer, normal: normalBuffer, textureCoord: textureCoordBuffer, indices: indexBuffer };
 }
 
-function initPositionBuffer(gl: any) {
+function initPositionBuffer(gl: WebGLRenderingContext) {
   const positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
   const positions = [
@@ -21,7 +28,7 @@ function initPositionBuffer(gl: any) {
   return positionBuffer;
 }
 
-function initTextureBuffer(gl: any) {
+function initTextureBuffer(gl: WebGLRenderingContext) {
   const textureCoordBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
   const textureCoordinates = [
@@ -42,7 +49,7 @@ function initTextureBuffer(gl: any) {
   return textureCoordBuffer;
 }
 
-function initIndexBuffer(gl: any) {
+function initIndexBuffer(gl: WebGLRenderingContext) {
   const indexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
   const indices = [
@@ -57,7 +64,7 @@ function initIndexBuffer(gl: any) {
   return indexBuffer;
 }
 
-function initNormalBuffer(gl: any) {
+function initNormalBuffer(gl: WebGLRenderingContext) {
   const normalBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
   const vertexNormals = [
@@ -73,4 +80,4 @@ function initNormalBuffer(gl: any) {
 }
 
 
-export { initBuffers };
+export { initBuffers, Buffers };

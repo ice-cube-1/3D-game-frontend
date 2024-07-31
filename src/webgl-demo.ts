@@ -1,10 +1,45 @@
 import { initBuffers } from "./init-buffers.js";
 import { drawScene } from "./draw-scene.js";
-import { testTypescript } from "./test.js"
 
 const hitbox = 0.5;
 
-function addmore(i: any, z: any, j: any) {
+export type Weapon = {
+    coords: [number, number, number];
+    rarity: number;
+};
+
+type vec2d = {
+    x: number;
+    y: number;
+};
+
+export type Player = {
+    x: number;
+    y: number;
+    z: number;
+    rotation: number;
+    zspeed: number;
+    weaponPos: number;
+    attackSpeed: number;
+    inventory: Weapon[];
+}
+
+export type ProgramInfo = {
+    program: WebGLProgram;
+    attribLocations: {
+        vertexPosition: number;
+        vertexNormal: number;
+        textureCoord: number;
+    };
+    uniformLocations: {
+        projectionMatrix: WebGLUniformLocation | null;
+        modelViewMatrix: WebGLUniformLocation | null;
+        normalMatrix: WebGLUniformLocation | null;
+        uSampler: WebGLUniformLocation | null;
+    };
+}
+
+function addmore(i: number, z: number, j: number) {
     var x = Math.random()
     if (x < 0.1) {
         items.push([i, z + 2, j]);
@@ -13,11 +48,10 @@ function addmore(i: any, z: any, j: any) {
         weapons.push({ coords: [i, z + 2, j], rarity: Math.floor(Math.random() * 5) });
     }
 }
-testTypescript("hello")
 var direction = ''
 const gridsize = 80
-var items: any = []
-var weapons: any = []
+var items: number[][] = []
+var weapons: Weapon[] = []
 for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
     for (var j = -gridsize / 2; j < gridsize / 2; j += 2) {
         items.push([i, 0, j]);
@@ -32,9 +66,11 @@ for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
     items.push([-gridsize / 2, 2, i])
     items.push([-gridsize / 2, 4, i])
 }
-var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0 }, { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0 }, { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0 }]
-var player = { x: 0, y: 0, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{ coords: [0, 0], rarity: 0 }] }
-var messages: any = []
+var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: []}, 
+    { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: []}, 
+    { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: []}]
+var player: Player = { x: 0, y: 0, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{ coords: [0, 0, 0], rarity: 0 }] }
+var messages: string[] = []
 var chatFocussed = false
 var frame = 1
 const rarities = ["common", "uncommon", "rare", "epic", "legendary"]
@@ -74,7 +110,7 @@ function main() {
         gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
         }
     `;
-    const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+    const shaderProgram = initShaderProgram(gl, vsSource, fsSource) as WebGLProgram;
     const programInfo = {
         program: shaderProgram,
         attribLocations: {
@@ -90,13 +126,13 @@ function main() {
         },
     };
     const buffers = initBuffers(gl);
-    const floortexture = loadTexture(gl, "floortexture.png");
-    const walltexture = loadTexture(gl, "walltexture.png")
-    var weapontextures: any[] = []
+    const floortexture = loadTexture(gl, "floortexture.png") as WebGLTexture;
+    const walltexture = loadTexture(gl, "walltexture.png") as WebGLTexture;
+    var weapontextures: WebGLTexture[] = []
     for (i = 0; i < rarities.length; i++) {
-        weapontextures.push(loadTexture(gl, `sword/${rarities[i]}.png`))
+        weapontextures.push(loadTexture(gl, `sword/${rarities[i]}.png`) as WebGLTexture)
     }
-    const character = loadTexture(gl, "character.png")
+    const character = loadTexture(gl, "character.png") as WebGLTexture
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
         const coords = document.getElementById("coordinates") as HTMLElement
@@ -220,7 +256,7 @@ $(document).keypress(function (e) {
     }
 })
 
-function playerPlayerCollision(x: any, y: any, z: any) {
+function playerPlayerCollision(x: number, y: number, z: number) {
     for (var i = 0; i < players.length; i++) {
         if (Math.abs(z - players[i].z) < 4) {
             if ((-x - players[i].x) ** 2 + (-y - players[i].y) ** 2 <= (hitbox * 4) ** 2) {
@@ -231,7 +267,7 @@ function playerPlayerCollision(x: any, y: any, z: any) {
     return true
 }
 
-function checkNotCollision(playerX: any, playerY: any, Zmin: any, Zmax: any) {
+function checkNotCollision(playerX: number, playerY: number, Zmin: number, Zmax: number) {
     for (var i = 0; i < items.length; i++) {
         if (items[i][1] <= Math.ceil(Zmax) && items[i][1] >= Math.ceil(Zmin)) {
             var circleDistance = { x: Math.abs(items[i][0] + playerX), y: Math.abs(items[i][2] + playerY) }
@@ -246,24 +282,24 @@ function checkNotCollision(playerX: any, playerY: any, Zmin: any, Zmax: any) {
     return true
 }
 
-function initShaderProgram(gl: any, vsSource: any, fsSource: any) {
+function initShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string) {
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
     const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
     const shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
+    gl.attachShader(shaderProgram as WebGLProgram, vertexShader as WebGLShader);
+    gl.attachShader(shaderProgram as WebGLProgram, fragmentShader as WebGLShader);
+    gl.linkProgram(shaderProgram as WebGLProgram);
     return shaderProgram;
 }
 
-function loadShader(gl: any, type: any, source: any) {
+function loadShader(gl: WebGLRenderingContext, type: number, source: string) {
     const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
+    gl.shaderSource(shader as WebGLShader, source);
+    gl.compileShader(shader as WebGLShader);
     return shader;
 }
 
-function loadTexture(gl: any, url: any) {
+function loadTexture(gl: WebGLRenderingContext, url: string) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     const level = 0;
@@ -293,11 +329,11 @@ function loadTexture(gl: any, url: any) {
     return texture;
 }
 
-function isPowerOf2(value: any) {
+function isPowerOf2(value: number) {
     return (value & (value - 1)) === 0;
 }
 
-function getMousePosition(event: any, target: any) {
+function getMousePosition(event: MouseEvent, target: HTMLElement) {
     target = target || event.target;
     const rect = target.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width * 2 - 1;
@@ -305,7 +341,7 @@ function getMousePosition(event: any, target: any) {
     return { x, y };
 }
 
-function gravity(x: any, y: any, z: any, zspeed: any) {
+function gravity(x: number, y: number, z: number, zspeed: number) {
     if (!checkNotCollision(x, y, Math.ceil(z - 5), Math.ceil(z - 5)) || !playerPlayerCollision(x, y, Math.ceil(z - 1))) {
         zspeed = 0;
         z = Math.ceil(z);
@@ -331,12 +367,12 @@ function interact() {
     }
 }
 
-function makeUnitVector(vector: any) {
+function makeUnitVector(vector: vec2d) {
     let magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2)
     return { x: vector.x / magnitude, y: vector.y / magnitude }
 }
 
-function dotProduct(a: any, b: any) {
+function dotProduct(a: vec2d, b: vec2d) {
     return (a.x * b.x) + (a.y * b.y)
 }
 

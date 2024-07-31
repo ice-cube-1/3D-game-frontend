@@ -1,14 +1,17 @@
 // @ts-ignore
 import {Mat4} from "./libs/gl-matrix/Mat4.js";
+import {ProgramInfo, Player, Weapon} from "./webgl-demo.js"
+import {Buffers} from "./init-buffers.js"
 
-function drawScene(gl: any, programInfo: any, buffers: any, floortexture: any, walltexture: any, weapontextures: any, cameraRotationX: any, cameraRotationY: any, xpos: any, ypos: any, zpos: any, items: any, attackPos: any, players: any, character: any, weapons: any, frame: any, currentweapon: any) {
+function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers: Buffers, floortexture: WebGLTexture, walltexture: WebGLTexture, weapontextures: WebGLTexture[], cameraRotationX: number, cameraRotationY: number, xpos: number, ypos: number, zpos: number, items: number[][], attackPos: number, players: Player[], character: WebGLTexture, weapons: Weapon[], frame: number, currentweapon: number) {
     gl.clearColor(0.8, 0.9, 1.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     const fieldOfView = (45 * Math.PI) / 180;
-    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+    const canvas = gl.canvas as HTMLCanvasElement;
+    const aspect = canvas.clientWidth / canvas.clientHeight;
     const zNear = 0.1;
     const zFar = 100.0;
     const projectionMatrix = Mat4.create();
@@ -53,7 +56,7 @@ function drawScene(gl: any, programInfo: any, buffers: any, floortexture: any, w
         Mat4.translate(modelViewMatrix, modelViewMatrix, [-players[i].x, -players[i].z + 2, -players[i].y]);
     }
     for (let i = 0; i < weapons.length; i++) {
-        gl.bindTexture(gl.TEXTURE_2D, weapontextures[weapons[i].rarity]);
+            gl.bindTexture(gl.TEXTURE_2D, weapontextures[weapons[i].rarity]);
         Mat4.translate(modelViewMatrix, modelViewMatrix, weapons[i].coords)
         Mat4.rotate(modelViewMatrix, modelViewMatrix, frame/50, [0,1,0])
         Mat4.scale(modelViewMatrix, modelViewMatrix, [0.005, 0.5, 0.5])
