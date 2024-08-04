@@ -1,5 +1,5 @@
 // @ts-ignore
-import {Mat4} from "./libs/gl-matrix/Mat4.js";
+import {Mat4} from "./libs/gl-matrix/mat4.js";
 import {ProgramInfo, Player, Weapon} from "./webgl-demo.js"
 import {Buffers} from "./init-buffers.js"
 
