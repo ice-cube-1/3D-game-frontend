@@ -23,6 +23,7 @@ export type Player = {
     weaponPos: number;
     attackSpeed: number;
     inventory: Weapon[];
+    hp: number;
 }
 
 export type StoredPlayer = {
@@ -32,7 +33,7 @@ export type StoredPlayer = {
     z: number;
     rotation: number;
     weaponPos: number;
-    inventory: Weapon[]
+    inventory: Weapon[];
 }
 
 export type ProgramInfo = {
@@ -54,7 +55,7 @@ var blocks: number[][] = []
 var weapons: Weapon[] = []
 var players: StoredPlayer[] = []
 var messages: string[] = []
-var player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0}]}
+var player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0}], hp: 10}
 var direction = ""
 const socket = new WebSocket(document.location.protocol + '//' + document.domain + ':' + location.port + '/socket');
 socket.addEventListener("message", (toUpdate) => {
@@ -98,6 +99,13 @@ socket.addEventListener("message", (toUpdate) => {
             break;
         case "zspeed":
             player.zspeed+=Number(content)
+            player.hp-=1
+            console.log(player.hp)
+            if (player.hp <= 0) {
+                player.x = Math.floor(Math.random()*80)-40;
+                player.y = Math.floor(Math.random()*80)-40;
+                player.inventory = [{coords: [0,0,0], rarity: 0}];
+            }
             break;
         case "weapon":
             const toplace: number[] = content.split(",").map(num => Number(num))
