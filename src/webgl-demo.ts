@@ -4,7 +4,7 @@ import { drawScene } from "./draw-scene.js";
 const hitbox = 0.5;
 
 export type Weapon = {
-    coords: [number, number, number];
+    coords: number[];
     rarity: number;
 };
 
@@ -14,6 +14,7 @@ type vec2d = {
 };
 
 export type Player = {
+    id: number;
     x: number;
     y: number;
     z: number;
@@ -22,6 +23,16 @@ export type Player = {
     weaponPos: number;
     attackSpeed: number;
     inventory: Weapon[];
+}
+
+export type StoredPlayer = {
+    id: number;
+    x: number;
+    y: number;
+    z: number;
+    rotation: number;
+    weaponPos: number;
+    inventory: Weapon[]
 }
 
 export type ProgramInfo = {
@@ -39,38 +50,63 @@ export type ProgramInfo = {
     };
 }
 
-function addmore(i: number, z: number, j: number) {
-    var x = Math.random()
-    if (x < 0.1) {
-        items.push([i, z + 2, j]);
-        addmore(i, z + 2, j)
-    } else if (x < 0.15) {
-        weapons.push({ coords: [i, z + 2, j], rarity: Math.floor(Math.random() * 5) });
-    }
-}
-var direction = ''
-const gridsize = 80
-var items: number[][] = []
+var blocks: number[][] = []
 var weapons: Weapon[] = []
-for (var i = -gridsize / 2; i < gridsize / 2; i += 2) {
-    for (var j = -gridsize / 2; j < gridsize / 2; j += 2) {
-        items.push([i, 0, j]);
-        addmore(i, 0, j)
-    }
-    items.push([i, 2, gridsize / 2])
-    items.push([i, 4, gridsize / 2])
-    items.push([gridsize / 2, 2, i])
-    items.push([gridsize / 2, 4, i])
-    items.push([i, 2, -gridsize / 2])
-    items.push([i, 4, -gridsize / 2])
-    items.push([-gridsize / 2, 2, i])
-    items.push([-gridsize / 2, 4, i])
-}
-var players = [{ x: 0, y: 10, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: []}, 
-    { x: 10, y: 10, z: 6, rotation: 0.5, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: []}, 
-    { x: -10, y: 0, z: 6, rotation: -1, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: []}]
-var player: Player = { x: 0, y: 0, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{ coords: [0, 0, 0], rarity: 0 }] }
+var players: StoredPlayer[] = []
 var messages: string[] = []
+var player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0}]}
+var direction = ""
+const socket = new WebSocket(document.location.protocol + '//' + document.domain + ':' + location.port + '/socket');
+socket.addEventListener("message", (toUpdate) => {
+    var [idstr, type,content]: string[] = toUpdate.data.split(": ",3)
+    var id = Number(idstr)
+    switch (type) {
+        case "message":
+            if (chatFocussed) {
+                messages.splice(messages.length-1, 0, content)
+            } else {
+                messages.push(content)
+            }
+        case "position":
+            splitPos(content,id)
+            break;
+        case "weaponPickup":
+            const [pickedUp, dropped]: number[][] = content.split(" - ").map(item => item.split(", ").map(num => Number(num)));
+            weapons = weapons.filter(weapon => !(weapon.coords[0] === pickedUp[0] && weapon.coords[1] === pickedUp[1] && weapon.coords[2] === pickedUp[2]));
+            weapons.push({coords: dropped.slice(0,3), rarity: dropped[3]})
+            players[idxFromID(id)].inventory[0] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3]}
+            break;
+        case "blocks":
+            blocks.push(content.split(", ").map(item => Number(item))); break;
+        case "playerStats":
+            players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[]})
+            var stats = content.split("")
+            for (const i of stats) {
+                [type,content] = i.split(": ")
+                switch (type) {
+                    case "position": 
+                        splitPos(content, id); break;
+                    case "weaponchoice": 
+                        var weapon = content.split(", ").map(item => Number(item))
+                        players[idxFromID(id)].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3]}
+                }
+            }
+            console.log(players)
+            break;
+        case "id":
+            player.id = id;
+            break;
+        case "zspeed":
+            player.zspeed+=Number(content)
+            break;
+        case "weapon":
+            const toplace: number[] = content.split(",").map(num => Number(num))
+            weapons.push({coords: toplace.slice(0,3), rarity: toplace[3]})
+            break;
+    }
+});
+
+
 var chatFocussed = false
 var frame = 1
 const rarities = ["common", "uncommon", "rare", "epic", "legendary"]
@@ -129,7 +165,7 @@ function main() {
     const floortexture = loadTexture(gl, "floortexture.png") as WebGLTexture;
     const walltexture = loadTexture(gl, "walltexture.png") as WebGLTexture;
     var weapontextures: WebGLTexture[] = []
-    for (i = 0; i < rarities.length; i++) {
+    for (var i = 0; i < rarities.length; i++) {
         weapontextures.push(loadTexture(gl, `sword/${rarities[i]}.png`) as WebGLTexture)
     }
     const character = loadTexture(gl, "character.png") as WebGLTexture
@@ -175,17 +211,11 @@ function main() {
             player.weaponPos = 1.6;
             player.attackSpeed = 0;
         }
-        var fallen = gravity(player.x, player.y, player.z, player.zspeed)
-        player.z = fallen.z;
-        player.zspeed = fallen.zspeed;
-        for (var i = 0; i < players.length; i++) {
-            players[i].z += players[i].zspeed / 10
-            fallen = gravity(players[i].z, players[i].y, players[i].z, players[i].zspeed)
-            players[i].z = fallen.z;
-            players[i].zspeed = fallen.zspeed;
-        }
+        gravity()
         frame += 1;
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, items, player.weaponPos, players, character, weapons, frame, player.inventory[0].rarity);
+        send(player.id+": position: "+player.x+", "+player.y+", "+player.z+", "+player.rotation+", "+player.weaponPos)
+        player.rotation = mousePos.x*4
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, blocks, player.weaponPos, players, character, weapons, frame, player.inventory[0].rarity);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
@@ -201,7 +231,7 @@ function main() {
                 let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
                 let directionVector = makeUnitVector({ x: -player.x - players[i].x, y: -player.y - players[i].y })
                 if ((-player.x - players[i].x) ** 2 + (-player.y - players[i].y) ** 2 <= (hitbox * 8) ** 2 && dotProduct(forwardVector, directionVector) > 0.9) {
-                    players[i].zspeed += 1
+                    send(players[i].id+": zspeed: "+1)
                     let vec = { x: -Math.sin(mousePos.x * 4) * 0.2, y: Math.cos(mousePos.x * 4) * 0.2 }
                     var tempX = players[i].x - vec.x;
                     var tempY = players[i].y - vec.y;
@@ -209,6 +239,7 @@ function main() {
                         players[i].x = tempX;
                         players[i].y = tempY;
                     }
+                    send(players[i].id+": position: "+players[i].x+", "+players[i].y+", "+players[i].z+", "+players[i].rotation+", "+players[i].weaponPos)
                 }
             }
         }
@@ -236,6 +267,7 @@ function main() {
             }
         } else {
             if (e.which == 13) {
+                send(player.id+": message: "+messages.slice(-1)[0])
                 chatFocussed = false;
             } else if (e.which == 8) {
                 messages[messages.length - 1] = messages[messages.length - 1].substring(0, messages[messages.length - 1].length - 1);
@@ -268,9 +300,9 @@ function playerPlayerCollision(x: number, y: number, z: number) {
 }
 
 function checkNotCollision(playerX: number, playerY: number, Zmin: number, Zmax: number) {
-    for (var i = 0; i < items.length; i++) {
-        if (items[i][1] <= Math.ceil(Zmax) && items[i][1] >= Math.ceil(Zmin)) {
-            var circleDistance = { x: Math.abs(items[i][0] + playerX), y: Math.abs(items[i][2] + playerY) }
+    for (var i = 0; i < blocks.length; i++) {
+        if (blocks[i][1] <= Math.ceil(Zmax) && blocks[i][1] >= Math.ceil(Zmin)) {
+            var circleDistance = { x: Math.abs(blocks[i][0] + playerX), y: Math.abs(blocks[i][2] + playerY) }
             if (circleDistance.x > (1 + hitbox)) { continue; }
             if (circleDistance.y > (1 + hitbox)) { continue; }
             if (circleDistance.x <= 1) { return false; }
@@ -341,25 +373,23 @@ function getMousePosition(event: MouseEvent, target: HTMLElement) {
     return { x, y };
 }
 
-function gravity(x: number, y: number, z: number, zspeed: number) {
-    if (!checkNotCollision(x, y, Math.ceil(z - 5), Math.ceil(z - 5)) || !playerPlayerCollision(x, y, Math.ceil(z - 1))) {
-        zspeed = 0;
-        z = Math.ceil(z);
+function gravity() {
+    if (!checkNotCollision(player.x, player.y, Math.ceil(player.z - 5), Math.ceil(player.z - 5)) || !playerPlayerCollision(player.x, player.y, Math.ceil(player.z - 1))) {
+        player.zspeed = 0;
+        player.z = Math.ceil(player.z);
     } else {
-        zspeed -= 0.08;
+        player.zspeed -= 0.08;
     }
-    return {z, zspeed}
 }
 
 function interact() {
-    for (i = 0; i < weapons.length; i++) {
+    for (let i = 0; i < weapons.length; i++) {
         if (weapons[i].coords[0] == Math.round(-player.x / 2) * 2 && weapons[i].coords[1] == Math.round(player.z - 3) && weapons[i].coords[2] == Math.round(-player.y / 2) * 2) {
             var item = weapons.splice(i, 1)[0]
-            if (player.inventory.length != 0) {
-                player.inventory[0].coords = [Math.round(-player.x / 2) * 2, Math.round(player.z - 3), Math.round(-player.y / 2) * 2]
-                weapons.push(player.inventory[0])
-                player.inventory = player.inventory.splice(1, player.inventory.length - 1)
-            }
+            player.inventory[0].coords = [Math.round(-player.x / 2) * 2, Math.round(player.z - 3), Math.round(-player.y / 2) * 2]
+            weapons.push(player.inventory[0])
+            //player.inventory = player.inventory.splice(1, player.inventory.length - 1)
+            send(item.coords[0]+", "+item.coords[1]+", "+item.coords[2]+", "+item.rarity+" - "+player.inventory[0].coords[0]+", "+player.inventory[0].coords[1]+", "+player.inventory[0].coords[2]+", "+player.inventory[0].rarity)
             player.inventory.push(item)
             messages.push(`Picked up ${rarities[item.rarity]} item!`)
             return;
@@ -376,3 +406,37 @@ function dotProduct(a: vec2d, b: vec2d) {
     return (a.x * b.x) + (a.y * b.y)
 }
 
+function splitPos(content: string, id: number) {
+    id = idxFromID(id)
+    if (id != -1) {
+        var position = content.split(", ").map(num => Number(num));
+        players[id].x = -position[0]
+        players[id].y = -position[1]
+        players[id].z = position[2]
+        players[id].rotation = position[3]
+        players[id].weaponPos = position[4]
+    }
+}
+
+function idxFromID(id: number) {
+    for (const player of players) {
+        if (player.id == id) {
+            return players.indexOf(player)
+        }
+    }
+    return -1
+}
+function send(data: string) {
+
+    // Check if the WebSocket is already open
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(data);
+    } else {
+        // Otherwise, add an event listener to send the data once the connection is open
+        socket.addEventListener("open", function onOpen(ev) {
+            socket.send(data);
+            // Remove the event listener after it has been triggered
+            socket.removeEventListener("open", onOpen);
+        });
+    }
+}

@@ -1,9 +1,9 @@
 // @ts-ignore
 import {Mat4} from "./libs/gl-matrix/mat4.js";
-import {ProgramInfo, Player, Weapon} from "./webgl-demo.js"
+import {ProgramInfo, Weapon, StoredPlayer} from "./webgl-demo.js"
 import {Buffers} from "./init-buffers.js"
 
-function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers: Buffers, floortexture: WebGLTexture, walltexture: WebGLTexture, weapontextures: WebGLTexture[], cameraRotationX: number, cameraRotationY: number, xpos: number, ypos: number, zpos: number, items: number[][], attackPos: number, players: Player[], character: WebGLTexture, weapons: Weapon[], frame: number, currentweapon: number) {
+function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers: Buffers, floortexture: WebGLTexture, walltexture: WebGLTexture, weapontextures: WebGLTexture[], cameraRotationX: number, cameraRotationY: number, xpos: number, ypos: number, zpos: number, items: number[][], attackPos: number, players: StoredPlayer[], character: WebGLTexture, weapons: Weapon[], frame: number, currentweapon: number) {
     gl.clearColor(0.8, 0.9, 1.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
