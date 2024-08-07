@@ -68,6 +68,7 @@ socket.addEventListener("message", (toUpdate) => {
             } else {
                 messages.push(content)
             }
+            break;
         case "position":
             splitPos(content,id)
             break;
@@ -100,11 +101,13 @@ socket.addEventListener("message", (toUpdate) => {
         case "zspeed":
             player.zspeed+=Number(content)
             player.hp-=1
-            console.log(player.hp)
             if (player.hp <= 0) {
                 player.x = Math.floor(Math.random()*80)-40;
                 player.y = Math.floor(Math.random()*80)-40;
                 player.inventory = [{coords: [0,0,0], rarity: 0}];
+                console.log("death")
+                send(player.id+": death: aa")
+                player.hp=10;
             }
             break;
         case "weapon":
