@@ -35,6 +35,7 @@ export type StoredPlayer = {
     rotation: number;
     weaponPos: number;
     inventory: Weapon[];
+    name: string;
 }
 
 export type ProgramInfo = {
@@ -83,7 +84,7 @@ socket.addEventListener("message", (toUpdate) => {
         case "blocks":
             blocks.push(content.split(", ").map(item => Number(item))); break;
         case "playerStats":
-            players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[]})
+            players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[], name:"unknown"})
             var stats = content.split(" - ")
             for (const i of stats) {
                 [type,content] = i.split(":")
@@ -95,6 +96,8 @@ socket.addEventListener("message", (toUpdate) => {
                         var weapon = content.split(", ").map(item => Number(item))
                         players[idxFromID(id)].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3]}
                         break;
+                    case "Name":
+                        players[idxFromID(id)].name = content
                 }
                 console.log(players[idxFromID(id)].inventory)
             }
@@ -120,6 +123,27 @@ socket.addEventListener("message", (toUpdate) => {
         case "weaponPos":
             players[id].weaponPos=Number(content)
             break;
+        case "login":
+            if (content == 'incorrect password') {
+                messages.push("This username has already been taken (or wrong password)")
+            } else if (content == 'logged in') {
+                messages.push("Please refresh to log out so you can log in as someone else")
+            } else if (content.startsWith("account")) {
+                const username = content.split(" ")[1]
+                player.name = username;
+                messages.push("Your account has been successfully created")
+            } else {
+                var playeridx = idxFromID(Number(content))
+                player.x = players[playeridx].x
+                player.y = players[playeridx].y
+                player.x = players[playeridx].z
+                player.inventory = players[playeridx].inventory
+                player.name = players[playeridx].name
+                player.id = players[playeridx].id
+                players.splice(playeridx)
+                messages.push("You have logged in as "+player.name)
+                send(player.name+"has logged in")
+            }
     }
 });
 
@@ -286,15 +310,14 @@ function main() {
         } else {
             if (e.which == 13) {
                 var message: string = messages[messages.length - 1]
-                if (message.startsWith("/setname ")) {
-                    messages[messages.length - 1] = player.name+" has changed to "+message.slice(9)
-                    player.name = message.slice(9)
+                if (message.startsWith("/login ")) {
+                    send(player.id+": login: "+message.slice(7))
                 }
                 else {
                     messages[messages.length - 1] = player.name + " - " + message;
+                    send(player.id+": message: "+messages.slice(-1)[0])
+                    chatFocussed = false;
                 }
-                send(player.id+": message: "+messages.slice(-1)[0])
-                chatFocussed = false;
             } else if (e.which == 8) {
                 messages[messages.length - 1] = messages[messages.length - 1].substring(0, messages[messages.length - 1].length - 1);
             }
