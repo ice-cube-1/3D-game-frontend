@@ -24,6 +24,7 @@ export type Player = {
     attackSpeed: number;
     inventory: Weapon[];
     hp: number;
+    name: string;
 }
 
 export type StoredPlayer = {
@@ -55,7 +56,7 @@ var blocks: number[][] = []
 var weapons: Weapon[] = []
 var players: StoredPlayer[] = []
 var messages: string[] = []
-var player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0}], hp: 10}
+var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0}], hp: 10, name: "unknown"}
 var direction = ""
 const socket = new WebSocket(document.location.protocol + '//' + document.domain + ':' + location.port + '/socket');
 socket.addEventListener("message", (toUpdate) => {
@@ -108,7 +109,7 @@ socket.addEventListener("message", (toUpdate) => {
                 player.x = Math.floor(Math.random()*80)-40;
                 player.y = Math.floor(Math.random()*80)-40;
                 player.inventory = [{coords: [0,0,0], rarity: 0}];
-                send(player.id+": death: aa")
+                send(player.id+": death: "+player.name)
                 player.hp=10;
             }
             break;
@@ -284,6 +285,14 @@ function main() {
             }
         } else {
             if (e.which == 13) {
+                var message: string = messages[messages.length - 1]
+                if (message.startsWith("/setname ")) {
+                    messages[messages.length - 1] = player.name+" has changed to "+message.slice(9)
+                    player.name = message.slice(9)
+                }
+                else {
+                    messages[messages.length - 1] = player.name + " - " + message;
+                }
                 send(player.id+": message: "+messages.slice(-1)[0])
                 chatFocussed = false;
             } else if (e.which == 8) {
@@ -442,15 +451,11 @@ function idxFromID(id: number) {
     return -1
 }
 function send(data: string) {
-
-    // Check if the WebSocket is already open
     if (socket.readyState === WebSocket.OPEN) {
         socket.send(data);
     } else {
-        // Otherwise, add an event listener to send the data once the connection is open
         socket.addEventListener("open", function onOpen(ev) {
             socket.send(data);
-            // Remove the event listener after it has been triggered
             socket.removeEventListener("open", onOpen);
         });
     }
