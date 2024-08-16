@@ -77,23 +77,26 @@ socket.addEventListener("message", (toUpdate) => {
             weapons = weapons.filter(weapon => !(weapon.coords[0] === pickedUp[0] && weapon.coords[1] === pickedUp[1] && weapon.coords[2] === pickedUp[2]));
             weapons.push({coords: dropped.slice(0,3), rarity: dropped[3]})
             players[idxFromID(id)].inventory[0] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3]}
+            console.log(id+" picked up "+pickedUp[3]+", dropped "+dropped[3])
             break;
         case "blocks":
             blocks.push(content.split(", ").map(item => Number(item))); break;
         case "playerStats":
             players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[]})
-            var stats = content.split("")
+            var stats = content.split(" - ")
             for (const i of stats) {
-                [type,content] = i.split(": ")
+                [type,content] = i.split(":")
                 switch (type) {
                     case "position": 
-                        splitPos(content, id); break;
-                    case "weaponchoice": 
+                        splitPos(content, id); 
+                        break;
+                    case "weaponChoice": 
                         var weapon = content.split(", ").map(item => Number(item))
                         players[idxFromID(id)].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3]}
+                        break;
                 }
+                console.log(players[idxFromID(id)].inventory)
             }
-            console.log(players)
             break;
         case "id":
             player.id = id;
@@ -105,7 +108,6 @@ socket.addEventListener("message", (toUpdate) => {
                 player.x = Math.floor(Math.random()*80)-40;
                 player.y = Math.floor(Math.random()*80)-40;
                 player.inventory = [{coords: [0,0,0], rarity: 0}];
-                console.log("death")
                 send(player.id+": death: aa")
                 player.hp=10;
             }
@@ -113,6 +115,9 @@ socket.addEventListener("message", (toUpdate) => {
         case "weapon":
             const toplace: number[] = content.split(",").map(num => Number(num))
             weapons.push({coords: toplace.slice(0,3), rarity: toplace[3]})
+            break;
+        case "weaponPos":
+            players[id].weaponPos=Number(content)
             break;
     }
 });
@@ -238,6 +243,7 @@ function main() {
     addEventListener("click", (event) => {
         if (player.attackSpeed == 0) {
             player.attackSpeed = 0.02
+            send(player.id+": weaponPos: "+player.weaponPos)
             for (var i = 0; i < players.length; i++) {
                 let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
                 let directionVector = makeUnitVector({ x: -player.x - players[i].x, y: -player.y - players[i].y })
@@ -396,13 +402,11 @@ function gravity() {
 function interact() {
     for (let i = 0; i < weapons.length; i++) {
         if (weapons[i].coords[0] == Math.round(-player.x / 2) * 2 && weapons[i].coords[1] == Math.round(player.z - 3) && weapons[i].coords[2] == Math.round(-player.y / 2) * 2) {
-            var item = weapons.splice(i, 1)[0]
-            player.inventory[0].coords = [Math.round(-player.x / 2) * 2, Math.round(player.z - 3), Math.round(-player.y / 2) * 2]
-            weapons.push(player.inventory[0])
-            //player.inventory = player.inventory.splice(1, player.inventory.length - 1)
-            send(item.coords[0]+", "+item.coords[1]+", "+item.coords[2]+", "+item.rarity+" - "+player.inventory[0].coords[0]+", "+player.inventory[0].coords[1]+", "+player.inventory[0].coords[2]+", "+player.inventory[0].rarity)
-            player.inventory.push(item)
-            messages.push(`Picked up ${rarities[item.rarity]} item!`)
+            var storedrarity = weapons[i].rarity
+            weapons[i].rarity = player.inventory[0].rarity
+            send(player.id+": weaponPickup: "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+storedrarity+" - "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+player.inventory[0].rarity)
+            player.inventory[0].rarity = storedrarity
+            messages.push(`Picked up ${rarities[storedrarity]} item!`)
             return;
         }
     }

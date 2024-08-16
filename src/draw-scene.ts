@@ -39,33 +39,40 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
     for (let i = 0; i < items.length; i++) {
         if (items[i][1] == 0) { gl.bindTexture(gl.TEXTURE_2D, floortexture); }
         else { gl.bindTexture(gl.TEXTURE_2D, walltexture) }
+        const initialMatrix = Mat4.clone(modelViewMatrix);
         Mat4.translate(modelViewMatrix, modelViewMatrix, items[i]);
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
-        Mat4.translate(modelViewMatrix, modelViewMatrix, items[i].map((value: number) => -value));
-    }
-    gl.bindTexture(gl.TEXTURE_2D, character)
-    for (let i = 0; i < players.length; i++) {
-        Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x, players[i].z - 2, players[i].y]);
-        Mat4.scale(modelViewMatrix, modelViewMatrix, [1 / 1.2, 2, 1 / 1.2])
-        Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].rotation, [0, 1, 0])
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
-        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
-        Mat4.rotate(modelViewMatrix, modelViewMatrix, -players[i].rotation, [0, 1, 0])
-        Mat4.scale(modelViewMatrix, modelViewMatrix, [1.2, 0.5, 1.2])
-        Mat4.translate(modelViewMatrix, modelViewMatrix, [-players[i].x, -players[i].z + 2, -players[i].y]);
+        Mat4.copy(modelViewMatrix, initialMatrix);
     }
     for (let i = 0; i < weapons.length; i++) {
-            gl.bindTexture(gl.TEXTURE_2D, weapontextures[weapons[i].rarity]);
+        const initialMatrix = Mat4.clone(modelViewMatrix);
+        gl.bindTexture(gl.TEXTURE_2D, weapontextures[weapons[i].rarity]);
         Mat4.translate(modelViewMatrix, modelViewMatrix, weapons[i].coords)
         Mat4.rotate(modelViewMatrix, modelViewMatrix, frame/50, [0,1,0])
         Mat4.scale(modelViewMatrix, modelViewMatrix, [0.005, 0.5, 0.5])
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
-        Mat4.scale(modelViewMatrix, modelViewMatrix, [200, 2, 2])
-        Mat4.rotate(modelViewMatrix, modelViewMatrix, -frame/50, [0,1,0])
-        Mat4.translate(modelViewMatrix, modelViewMatrix, (weapons[i].coords).map((value: number) => -value))
+        Mat4.copy(modelViewMatrix, initialMatrix);
     }
+    for (let i = 0; i < players.length; i++) {
+        const initialMatrix = Mat4.clone(modelViewMatrix);
+        gl.bindTexture(gl.TEXTURE_2D, character);
+        Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x, players[i].z - 2, players[i].y]);
+        Mat4.scale(modelViewMatrix, modelViewMatrix, [1 / 1.2, 2, 1 / 1.2]);
+        Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].rotation, [0, 1, 0]);
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+        gl.bindTexture(gl.TEXTURE_2D, weapontextures[players[i].inventory[0].rarity]);
+        Mat4.translate(modelViewMatrix, modelViewMatrix, [-1, 0, -1]);
+        Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].weaponPos * 4, [1, 0, 0]);
+        setNormalAttribute(gl, buffers, programInfo);
+        Mat4.scale(modelViewMatrix, modelViewMatrix, [0.01, 1, 0.2]);
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+        Mat4.copy(modelViewMatrix, initialMatrix);
+    }
+    
     const fixedModelViewMatrix = Mat4.create();
     gl.bindTexture(gl.TEXTURE_2D, weapontextures[currentweapon])
     Mat4.translate(fixedModelViewMatrix, fixedModelViewMatrix, [-1, 0, -1]);
@@ -74,6 +81,8 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
     Mat4.scale(fixedModelViewMatrix, fixedModelViewMatrix, [0.01, 1, 0.2]);
     gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, fixedModelViewMatrix);
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+    Mat4.rotate(fixedModelViewMatrix, fixedModelViewMatrix, attackPos * 4, [-1, 0, 0])
+    Mat4.translate(fixedModelViewMatrix, fixedModelViewMatrix, [1, 0, 1]);
 }
 
 function setPositionAttribute(gl: any, buffers: any, programInfo: any) {
