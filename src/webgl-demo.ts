@@ -37,6 +37,7 @@ export type StoredPlayer = {
     weaponPos: number;
     inventory: Weapon[];
     name: string;
+    hp: number;
 }
 
 export type ProgramInfo = {
@@ -80,12 +81,11 @@ socket.addEventListener("message", (toUpdate) => {
             weapons = weapons.filter(weapon => !(weapon.coords[0] === pickedUp[0] && weapon.coords[1] === pickedUp[1] && weapon.coords[2] === pickedUp[2]));
             weapons.push({coords: dropped.slice(0,3), rarity: dropped[3], type: dropped[4]})
             players[idxFromID(id)].inventory[0] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3], type: pickedUp[4]}
-            console.log(id+" picked up "+pickedUp[3]+", dropped "+dropped[3])
             break;
         case "blocks":
             blocks.push(content.split(", ").map(item => Number(item))); break;
         case "playerStats":
-            players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[], name:"unknown"})
+            players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[], name:"unknown", hp: 40})
             var stats = content.split(" - ")
             for (const i of stats) {
                 [type,content] = i.split(":")
@@ -99,6 +99,8 @@ socket.addEventListener("message", (toUpdate) => {
                         break;
                     case "name":
                         players[idxFromID(id)].name = content
+                    case "hp":
+                        players[idxFromID(id)].hp = Number(content)
                 }
                 console.log(players[idxFromID(id)].inventory)
             }
@@ -108,14 +110,6 @@ socket.addEventListener("message", (toUpdate) => {
             break;
         case "zspeed":
             player.zspeed+=Number(content)
-            player.hp-=1
-            if (player.hp <= 0) {
-                player.x = Math.floor(Math.random()*80)-40;
-                player.y = Math.floor(Math.random()*80)-40;
-                player.inventory = [{coords: [0,0,0], rarity: 0, type: 0}];
-                send(player.id+": death: "+player.name)
-                player.hp=10;
-            }
             break;
         case "weapon":
             const toplace: number[] = content.split(",").map(num => Number(num))
@@ -145,6 +139,15 @@ socket.addEventListener("message", (toUpdate) => {
                 messages.push("You have logged in as "+player.name)
                 send(player.name+"has logged in")
             }
+            break;
+        case "hp":
+            player.hp=Number(content)
+            if (player.hp == 10) {
+                player.x = Math.floor(Math.random()*80)-40;
+                player.y = Math.floor(Math.random()*80)-40;
+            }
+            break;
+
     }
 });
 
@@ -211,7 +214,6 @@ function main() {
     for (var j = 0; j < itemtypes.length; j++) {
         weapontextures.push([])
         for (var i = 0; i < rarities.length; i++) {
-            console.log(`${itemtypes[j]}/${rarities[i]}.png`)
             weapontextures[j].push(loadTexture(gl, `${itemtypes[j]}/${rarities[i]}.png`) as WebGLTexture)
         }
     }
@@ -287,7 +289,15 @@ function main() {
                         players[i].x = tempX;
                         players[i].y = tempY;
                     }
+                    players[i].hp-=1
+                    if (players[i].hp <= 0) {
+                        players[i].inventory = [{coords: [0,0,0], rarity: 0, type: 0}];
+                        messages.push(players[i].name+" has been killed by "+player.name)
+                        send(player.name+": message: "+players[i].name+" has been killed by "+player.name)
+                        players[i].hp=10;
+                    }
                     send(players[i].id+": position: "+players[i].x+", "+players[i].y+", "+players[i].z+", "+players[i].rotation+", "+players[i].weaponPos)
+                    send(players[i].id+": hp: "+players[i].hp)
                 }
             }
         }
