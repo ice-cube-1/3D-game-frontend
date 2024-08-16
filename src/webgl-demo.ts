@@ -96,7 +96,7 @@ socket.addEventListener("message", (toUpdate) => {
                         var weapon = content.split(", ").map(item => Number(item))
                         players[idxFromID(id)].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3]}
                         break;
-                    case "Name":
+                    case "name":
                         players[idxFromID(id)].name = content
                 }
                 console.log(players[idxFromID(id)].inventory)
@@ -316,8 +316,8 @@ function main() {
                 else {
                     messages[messages.length - 1] = player.name + " - " + message;
                     send(player.id+": message: "+messages.slice(-1)[0])
-                    chatFocussed = false;
                 }
+                chatFocussed = false;
             } else if (e.which == 8) {
                 messages[messages.length - 1] = messages[messages.length - 1].substring(0, messages[messages.length - 1].length - 1);
             }
