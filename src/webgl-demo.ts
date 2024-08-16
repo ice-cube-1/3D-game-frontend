@@ -6,6 +6,7 @@ const hitbox = 0.5;
 export type Weapon = {
     coords: number[];
     rarity: number;
+    type: number;
 };
 
 type vec2d = {
@@ -57,7 +58,7 @@ var blocks: number[][] = []
 var weapons: Weapon[] = []
 var players: StoredPlayer[] = []
 var messages: string[] = []
-var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0}], hp: 10, name: "unknown"}
+var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0, type: 0}], hp: 10, name: "unknown"}
 var direction = ""
 const socket = new WebSocket(document.location.protocol + '//' + document.domain + ':' + location.port + '/socket');
 socket.addEventListener("message", (toUpdate) => {
@@ -77,8 +78,8 @@ socket.addEventListener("message", (toUpdate) => {
         case "weaponPickup":
             const [pickedUp, dropped]: number[][] = content.split(" - ").map(item => item.split(", ").map(num => Number(num)));
             weapons = weapons.filter(weapon => !(weapon.coords[0] === pickedUp[0] && weapon.coords[1] === pickedUp[1] && weapon.coords[2] === pickedUp[2]));
-            weapons.push({coords: dropped.slice(0,3), rarity: dropped[3]})
-            players[idxFromID(id)].inventory[0] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3]}
+            weapons.push({coords: dropped.slice(0,3), rarity: dropped[3], type: dropped[4]})
+            players[idxFromID(id)].inventory[0] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3], type: pickedUp[4]}
             console.log(id+" picked up "+pickedUp[3]+", dropped "+dropped[3])
             break;
         case "blocks":
@@ -94,7 +95,7 @@ socket.addEventListener("message", (toUpdate) => {
                         break;
                     case "weaponChoice": 
                         var weapon = content.split(", ").map(item => Number(item))
-                        players[idxFromID(id)].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3]}
+                        players[idxFromID(id)].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3], type: weapon[4]}
                         break;
                     case "name":
                         players[idxFromID(id)].name = content
@@ -111,14 +112,14 @@ socket.addEventListener("message", (toUpdate) => {
             if (player.hp <= 0) {
                 player.x = Math.floor(Math.random()*80)-40;
                 player.y = Math.floor(Math.random()*80)-40;
-                player.inventory = [{coords: [0,0,0], rarity: 0}];
+                player.inventory = [{coords: [0,0,0], rarity: 0, type: 0}];
                 send(player.id+": death: "+player.name)
                 player.hp=10;
             }
             break;
         case "weapon":
             const toplace: number[] = content.split(",").map(num => Number(num))
-            weapons.push({coords: toplace.slice(0,3), rarity: toplace[3]})
+            weapons.push({coords: toplace.slice(0,3), rarity: toplace[3], type: toplace[4]})
             break;
         case "weaponPos":
             players[id].weaponPos=Number(content)
@@ -151,6 +152,7 @@ socket.addEventListener("message", (toUpdate) => {
 var chatFocussed = false
 var frame = 1
 const rarities = ["common", "uncommon", "rare", "epic", "legendary"]
+const itemtypes = ["sword","axe","spear"]
 
 main();
 function main() {
@@ -205,9 +207,13 @@ function main() {
     const buffers = initBuffers(gl);
     const floortexture = loadTexture(gl, "floortexture.png") as WebGLTexture;
     const walltexture = loadTexture(gl, "walltexture.png") as WebGLTexture;
-    var weapontextures: WebGLTexture[] = []
-    for (var i = 0; i < rarities.length; i++) {
-        weapontextures.push(loadTexture(gl, `sword/${rarities[i]}.png`) as WebGLTexture)
+    var weapontextures: WebGLTexture[][] = []
+    for (var j = 0; j < itemtypes.length; j++) {
+        weapontextures.push([])
+        for (var i = 0; i < rarities.length; i++) {
+            console.log(`${itemtypes[j]}/${rarities[i]}.png`)
+            weapontextures[j].push(loadTexture(gl, `${itemtypes[j]}/${rarities[i]}.png`) as WebGLTexture)
+        }
     }
     const character = loadTexture(gl, "character.png") as WebGLTexture
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -256,7 +262,7 @@ function main() {
         frame += 1;
         send(player.id+": position: "+player.x+", "+player.y+", "+player.z+", "+player.rotation+", "+player.weaponPos)
         player.rotation = mousePos.x*4
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, blocks, player.weaponPos, players, character, weapons, frame, player.inventory[0].rarity);
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, blocks, player.weaponPos, players, character, weapons, frame,  [player.inventory[0].type,player.inventory[0].rarity]);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
@@ -435,10 +441,13 @@ function interact() {
     for (let i = 0; i < weapons.length; i++) {
         if (weapons[i].coords[0] == Math.round(-player.x / 2) * 2 && weapons[i].coords[1] == Math.round(player.z - 3) && weapons[i].coords[2] == Math.round(-player.y / 2) * 2) {
             var storedrarity = weapons[i].rarity
+            var storedtype = weapons[i].type
             weapons[i].rarity = player.inventory[0].rarity
-            send(player.id+": weaponPickup: "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+storedrarity+" - "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+player.inventory[0].rarity)
+            weapons[i].type = player.inventory[0].type
+            send(player.id+": weaponPickup: "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+storedrarity+", "+storedtype+" - "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+player.inventory[0].rarity+", "+player.inventory[0].type)
             player.inventory[0].rarity = storedrarity
-            messages.push(`Picked up ${rarities[storedrarity]} item!`)
+            player.inventory[0].type = storedtype
+            messages.push(`Picked up an ${rarities[storedrarity]} ${itemtypes[storedtype]}!`)
             return;
         }
     }
