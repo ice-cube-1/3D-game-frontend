@@ -59,7 +59,7 @@ var blocks: number[][] = []
 var weapons: Weapon[] = []
 var players: StoredPlayer[] = []
 var messages: string[] = []
-var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0, type: 0}], hp: 10, name: "unknown"}
+var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0, type: 0}], hp: 40, name: "unknown"}
 var direction = ""
 const socket = new WebSocket(document.location.protocol + '//' + document.domain + ':' + location.port + '/socket');
 socket.addEventListener("message", (toUpdate) => {
@@ -142,7 +142,7 @@ socket.addEventListener("message", (toUpdate) => {
             break;
         case "hp":
             player.hp=Number(content)
-            if (player.hp == 10) {
+            if (player.hp == 40) {
                 player.x = Math.floor(Math.random()*80)-40;
                 player.y = Math.floor(Math.random()*80)-40;
             }
@@ -155,7 +155,10 @@ socket.addEventListener("message", (toUpdate) => {
 var chatFocussed = false
 var frame = 1
 const rarities = ["common", "uncommon", "rare", "epic", "legendary"]
+const typeMultiplier = [1.5,2,1]
+const speedMultiplier = [1.5,1,2]
 const itemtypes = ["sword","axe","spear"]
+const ranges = [1,2,1.5]
 
 main();
 function main() {
@@ -221,7 +224,7 @@ function main() {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     function render() {
         const coords = document.getElementById("coordinates") as HTMLElement
-        coords.textContent = `X: ${player.x.toFixed(2)}, Y: ${player.y.toFixed(2)}, Z: ${((player.z - 5) / 2).toFixed(2)}`;
+        coords.textContent = `X: ${player.x.toFixed(2)}, Y: ${player.y.toFixed(2)}, Z: ${((player.z - 5) / 2).toFixed(2)}, HP: ${player.hp}`;
         const chat = document.getElementById("chat") as HTMLElement;
         chat.innerHTML = messages.join("<br/>");
         if (player.zspeed != 0) {
@@ -255,7 +258,7 @@ function main() {
             player.x = tempX;
             player.y = tempY
         }
-        player.weaponPos -= player.attackSpeed
+        player.weaponPos -= player.attackSpeed*speedMultiplier[player.inventory[0].type]
         if (player.weaponPos <= 0.7) {
             player.weaponPos = 1.6;
             player.attackSpeed = 0;
@@ -280,7 +283,7 @@ function main() {
             for (var i = 0; i < players.length; i++) {
                 let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
                 let directionVector = makeUnitVector({ x: -player.x - players[i].x, y: -player.y - players[i].y })
-                if ((-player.x - players[i].x) ** 2 + (-player.y - players[i].y) ** 2 <= (hitbox * 8) ** 2 && dotProduct(forwardVector, directionVector) > 0.9) {
+                if ((-player.x - players[i].x) ** 2 + (-player.y - players[i].y) ** 2 <= (hitbox * 8 * ranges[player.inventory[0].type]) ** 2 && dotProduct(forwardVector, directionVector) > 0.9) {
                     send(players[i].id+": zspeed: "+1)
                     let vec = { x: -Math.sin(mousePos.x * 4) * 0.2, y: Math.cos(mousePos.x * 4) * 0.2 }
                     var tempX = players[i].x - vec.x;
@@ -289,12 +292,12 @@ function main() {
                         players[i].x = tempX;
                         players[i].y = tempY;
                     }
-                    players[i].hp-=1
+                    players[i].hp-=Math.round((player.inventory[0].rarity+1)*typeMultiplier[player.inventory[0].type]/2)
                     if (players[i].hp <= 0) {
                         players[i].inventory = [{coords: [0,0,0], rarity: 0, type: 0}];
                         messages.push(players[i].name+" has been killed by "+player.name)
                         send(player.name+": message: "+players[i].name+" has been killed by "+player.name)
-                        players[i].hp=10;
+                        players[i].hp=40;
                     }
                     send(players[i].id+": position: "+players[i].x+", "+players[i].y+", "+players[i].z+", "+players[i].rotation+", "+players[i].weaponPos)
                     send(players[i].id+": hp: "+players[i].hp)
