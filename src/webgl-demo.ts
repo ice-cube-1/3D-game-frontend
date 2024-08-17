@@ -156,6 +156,13 @@ socket.addEventListener("message", (toUpdate) => {
                 player.y = Math.floor(Math.random()*80)-40;
             }
             break;
+        case "moveItem":
+            const [oldcoords,newcoords] = content.split(" - ").map(i => i.split(", ").map(j => Number(j)))
+            for (var i = 0; i<weapons.length; i++) {
+                if (oldcoords.every((val, index) => val === weapons[i].coords[index])) {
+                    weapons[i].coords = newcoords;
+                }
+            }
 
     }
 });
@@ -166,7 +173,7 @@ var frame = 1
 const rarities = ["common", "uncommon", "rare", "epic", "legendary"]
 const typeMultiplier = [1.5,2,1]
 const speedMultiplier = [1.5,1,2]
-const itemtypes = ["sword","axe","spear","armour"]
+const itemtypes = ["sword","axe","spear","armour","potion"]
 const ranges = [1,2,1.5]
 
 main();
@@ -463,14 +470,17 @@ function gravity() {
 function interact() {
     for (let i = 0; i < weapons.length; i++) {
         if (weapons[i].coords[0] == Math.round(-player.x / 2) * 2 && weapons[i].coords[1] == Math.round(player.z - 3) && weapons[i].coords[2] == Math.round(-player.y / 2) * 2) {
+            if (weapons[i].type == 4) {
+                player.hp+=(weapons[i].rarity+1)
+                if (player.hp > 40) {player.hp = 40}
+                send(player.id+": hp: "+player.hp)
+                send(player.id+": moveItem: "+weapons[i].coords.join(", "))
+                return;
+            }
             var storedrarity = weapons[i].rarity
             var storedtype = weapons[i].type
-            var change;
-            if (storedtype == 3) {
-                change = 1
-            } else {
-                change = 0
-            }
+            var change = 0;
+            if (storedtype == 3) {change = 1}
             weapons[i].rarity = player.inventory[change].rarity
             weapons[i].type = player.inventory[change].type
             send(player.id+": weaponPickup: "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+storedrarity+", "+storedtype+" - "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+player.inventory[change].rarity+", "+player.inventory[change].type)
