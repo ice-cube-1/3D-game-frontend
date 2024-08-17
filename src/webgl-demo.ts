@@ -163,7 +163,9 @@ socket.addEventListener("message", (toUpdate) => {
                     weapons[i].coords = newcoords;
                 }
             }
-
+            break;
+        case "namechange":
+            players[idxFromID(id)].name = content;
     }
 });
 
@@ -243,6 +245,12 @@ function main() {
         coords.textContent = `X: ${player.x.toFixed(2)}, Y: ${player.y.toFixed(2)}, Z: ${((player.z - 5) / 2).toFixed(2)}, HP: ${player.hp}`;
         const chat = document.getElementById("chat") as HTMLElement;
         chat.innerHTML = messages.join("<br/>");
+        const info = document.getElementById("playerinfo") as HTMLElement;
+        var playerinfo = [player.name+": "+player.hp+"/40"];
+        for (i = 0; i<players.length; i++) {
+            playerinfo.push(players[i].name+": "+players[i].hp+"/40")
+        }
+        info.innerHTML = playerinfo.join("<br/>");
         if (player.zspeed != 0) {
             player.z += player.zspeed / 10
         } else {
