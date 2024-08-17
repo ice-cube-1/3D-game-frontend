@@ -59,7 +59,7 @@ var blocks: number[][] = []
 var weapons: Weapon[] = []
 var players: StoredPlayer[] = []
 var messages: string[] = []
-var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0, type: 0}], hp: 40, name: "unknown"}
+var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0, type: 0},{coords: [0,0,0], rarity: 0, type: 3}], hp: 40, name: "unknown"}
 var direction = ""
 const socket = new WebSocket(document.location.protocol + '//' + document.domain + ':' + location.port + '/socket');
 socket.addEventListener("message", (toUpdate) => {
@@ -80,7 +80,11 @@ socket.addEventListener("message", (toUpdate) => {
             const [pickedUp, dropped]: number[][] = content.split(" - ").map(item => item.split(", ").map(num => Number(num)));
             weapons = weapons.filter(weapon => !(weapon.coords[0] === pickedUp[0] && weapon.coords[1] === pickedUp[1] && weapon.coords[2] === pickedUp[2]));
             weapons.push({coords: dropped.slice(0,3), rarity: dropped[3], type: dropped[4]})
-            players[idxFromID(id)].inventory[0] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3], type: pickedUp[4]}
+            if (dropped[4] == 3) {
+                players[idxFromID(id)].inventory[1] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3], type: pickedUp[4]}
+            } else {
+                players[idxFromID(id)].inventory[0] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3], type: pickedUp[4]}
+            }
             break;
         case "blocks":
             blocks.push(content.split(", ").map(item => Number(item))); break;
@@ -95,7 +99,12 @@ socket.addEventListener("message", (toUpdate) => {
                         break;
                     case "weaponChoice": 
                         var weapon = content.split(", ").map(item => Number(item))
-                        players[idxFromID(id)].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3], type: weapon[4]}
+                        if (weapon[4] == 3) {
+                            players[idxFromID(id)].inventory[1] = {coords: weapon.slice(0,3), rarity: weapon[3], type: weapon[4]}
+
+                        } else {
+                            players[idxFromID(id)].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3], type: weapon[4]}
+                        }
                         break;
                     case "name":
                         players[idxFromID(id)].name = content
@@ -147,6 +156,13 @@ socket.addEventListener("message", (toUpdate) => {
                 player.y = Math.floor(Math.random()*80)-40;
             }
             break;
+        case "moveItem":
+            const [oldcoords,newcoords] = content.split(" - ").map(i => i.split(", ").map(j => Number(j)))
+            for (var i = 0; i<weapons.length; i++) {
+                if (oldcoords.every((val, index) => val === weapons[i].coords[index])) {
+                    weapons[i].coords = newcoords;
+                }
+            }
 
     }
 });
@@ -157,7 +173,7 @@ var frame = 1
 const rarities = ["common", "uncommon", "rare", "epic", "legendary"]
 const typeMultiplier = [1.5,2,1]
 const speedMultiplier = [1.5,1,2]
-const itemtypes = ["sword","axe","spear"]
+const itemtypes = ["sword","axe","spear","armour","potion"]
 const ranges = [1,2,1.5]
 
 main();
@@ -292,7 +308,8 @@ function main() {
                         players[i].x = tempX;
                         players[i].y = tempY;
                     }
-                    players[i].hp-=Math.round((player.inventory[0].rarity+1)*typeMultiplier[player.inventory[0].type]/2)
+                    players[i].hp-=Math.round((player.inventory[0].rarity+1)*typeMultiplier[player.inventory[0].type]/((1+players[i].inventory[1].rarity)))
+                    console.log(1+players[i].inventory[1].rarity)
                     if (players[i].hp <= 0) {
                         players[i].inventory = [{coords: [0,0,0], rarity: 0, type: 0}];
                         messages.push(players[i].name+" has been killed by "+player.name)
@@ -453,13 +470,22 @@ function gravity() {
 function interact() {
     for (let i = 0; i < weapons.length; i++) {
         if (weapons[i].coords[0] == Math.round(-player.x / 2) * 2 && weapons[i].coords[1] == Math.round(player.z - 3) && weapons[i].coords[2] == Math.round(-player.y / 2) * 2) {
+            if (weapons[i].type == 4) {
+                player.hp+=(weapons[i].rarity+1)
+                if (player.hp > 40) {player.hp = 40}
+                send(player.id+": hp: "+player.hp)
+                send(player.id+": moveItem: "+weapons[i].coords.join(", "))
+                return;
+            }
             var storedrarity = weapons[i].rarity
             var storedtype = weapons[i].type
-            weapons[i].rarity = player.inventory[0].rarity
-            weapons[i].type = player.inventory[0].type
-            send(player.id+": weaponPickup: "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+storedrarity+", "+storedtype+" - "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+player.inventory[0].rarity+", "+player.inventory[0].type)
-            player.inventory[0].rarity = storedrarity
-            player.inventory[0].type = storedtype
+            var change = 0;
+            if (storedtype == 3) {change = 1}
+            weapons[i].rarity = player.inventory[change].rarity
+            weapons[i].type = player.inventory[change].type
+            send(player.id+": weaponPickup: "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+storedrarity+", "+storedtype+" - "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+player.inventory[change].rarity+", "+player.inventory[change].type)
+            player.inventory[change].rarity = storedrarity
+            player.inventory[change].type = storedtype
             messages.push(`Picked up an ${rarities[storedrarity]} ${itemtypes[storedtype]}!`)
             return;
         }
