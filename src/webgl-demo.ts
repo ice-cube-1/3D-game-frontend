@@ -230,7 +230,7 @@ function main() {
     };
     const buffers = initBuffers(gl);
     const floortexture = loadTexture(gl, "floortexture.png") as WebGLTexture;
-    const walltexture = loadTexture(gl, "walltexture.png") as WebGLTexture;
+    const walltexture = loadTexture(gl, "squares.jpg") as WebGLTexture;
     var weapontextures: WebGLTexture[][] = []
     for (var j = 0; j < itemtypes.length; j++) {
         weapontextures.push([])
