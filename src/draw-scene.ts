@@ -3,7 +3,7 @@ import {Mat4} from "./libs/gl-matrix/mat4.js";
 import {ProgramInfo, Weapon, StoredPlayer, loadTexture} from "./webgl-demo.js"
 import {Buffers} from "./init-buffers.js"
 
-function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers: Buffers, floortexture: WebGLTexture, walltexture: WebGLTexture, weapontextures: WebGLTexture[][], cameraRotationX: number, cameraRotationY: number, xpos: number, ypos: number, zpos: number, items: number[][], attackPos: number, players: StoredPlayer[], character: WebGLTexture, weapons: Weapon[], frame: number, currentweapon: number[], shaderProgram: any) {
+function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers: Buffers, floortexture: WebGLTexture, walltexture: WebGLTexture, weapontextures: WebGLTexture[][], cameraRotationX: number, cameraRotationY: number, xpos: number, ypos: number, zpos: number, items: number[][], attackPos: number, players: StoredPlayer[], character: WebGLTexture, weapons: Weapon[], frame: number, currentweapon: number[], shaderProgram: WebGLProgram, armour: WebGLTexture) {
     gl.clearColor(0.8, 0.9, 1.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -57,15 +57,22 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
     }
     for (let i = 0; i < players.length; i++) {
         const initialMatrix = Mat4.clone(modelViewMatrix);
-        var blockcolor=loadTexture(gl, "", new Uint8Array([255, 0, 0, 255]))
+        var blockcolor = loadTexture(gl, "", new Uint8Array([255, 0, 0, 255]));
         bindTexture(gl, blockcolor, character, shaderProgram);
         Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x, players[i].z - 2, players[i].y]);
         Mat4.scale(modelViewMatrix, modelViewMatrix, [1 / 1.2, 2, 1 / 1.2]);
         Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].rotation, [0, 1, 0]);
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+        Mat4.copy(modelViewMatrix, initialMatrix);
+        bindTexture(gl, armour, false, shaderProgram);
+        Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x, players[i].z - 2, players[i].y]);
+        Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].rotation, [0, 1, 0]);
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+        Mat4.copy(modelViewMatrix, initialMatrix);
         bindTexture(gl, weapontextures[players[i].inventory[0].type][players[i].inventory[0].rarity], false, shaderProgram);
-        Mat4.translate(modelViewMatrix, modelViewMatrix, [-1, 0, -1]);
+        Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x - 1, players[i].z - 2, players[i].y - 1]);
         Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].weaponPos * 4, [1, 0, 0]);
         setNormalAttribute(gl, buffers, programInfo);
         Mat4.scale(modelViewMatrix, modelViewMatrix, [0.01, 1, 0.2]);
@@ -73,6 +80,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
         Mat4.copy(modelViewMatrix, initialMatrix);
     }
+    
     
     const fixedModelViewMatrix = Mat4.create();
     bindTexture(gl, weapontextures[currentweapon[0]][currentweapon[1]], false, shaderProgram)
