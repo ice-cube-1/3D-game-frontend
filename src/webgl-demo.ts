@@ -240,7 +240,7 @@ function main() {
     };
     const buffers = initBuffers(gl);
     const floortexture = loadTexture(gl, "floortexture.png") as WebGLTexture;
-    const walltexture = loadTexture(gl, "squares.jpg") as WebGLTexture;
+    const walltexture = loadTexture(gl, "walltexture.png") as WebGLTexture;
     var armourWearable: WebGLTexture[] = []
     for (var i = 0; i<rarities.length; i++) {
         armourWearable.push(loadTexture(gl, `armour-wearable/${rarities[i]}.png`) as WebGLTexture)
