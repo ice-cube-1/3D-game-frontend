@@ -241,7 +241,10 @@ function main() {
     const buffers = initBuffers(gl);
     const floortexture = loadTexture(gl, "floortexture.png") as WebGLTexture;
     const walltexture = loadTexture(gl, "squares.jpg") as WebGLTexture;
-    const armour = loadTexture(gl, "armour2.png") as WebGLTexture;
+    var armourWearable: WebGLTexture[] = []
+    for (var i = 0; i<rarities.length; i++) {
+        armourWearable.push(loadTexture(gl, `armour-wearable/${rarities[i]}.png`) as WebGLTexture)
+    }
     var weapontextures: WebGLTexture[][] = []
     for (var j = 0; j < itemtypes.length; j++) {
         weapontextures.push([])
@@ -302,7 +305,7 @@ function main() {
         frame += 1;
         send(player.id+": position: "+player.x+", "+player.y+", "+player.z+", "+player.rotation+", "+player.weaponPos)
         player.rotation = mousePos.x*4
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, blocks, player.weaponPos, players, character, weapons, frame,  [player.inventory[0].type,player.inventory[0].rarity], shaderProgram, armour);
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, blocks, player.weaponPos, players, character, weapons, frame,  player.inventory, shaderProgram, armourWearable);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);

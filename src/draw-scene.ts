@@ -3,7 +3,7 @@ import {Mat4} from "./libs/gl-matrix/mat4.js";
 import {ProgramInfo, Weapon, StoredPlayer, loadTexture} from "./webgl-demo.js"
 import {Buffers} from "./init-buffers.js"
 
-function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers: Buffers, floortexture: WebGLTexture, walltexture: WebGLTexture, weapontextures: WebGLTexture[][], cameraRotationX: number, cameraRotationY: number, xpos: number, ypos: number, zpos: number, items: number[][], attackPos: number, players: StoredPlayer[], character: WebGLTexture, weapons: Weapon[], frame: number, currentweapon: number[], shaderProgram: WebGLProgram, armour: WebGLTexture) {
+function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers: Buffers, floortexture: WebGLTexture, walltexture: WebGLTexture, weapontextures: WebGLTexture[][], cameraRotationX: number, cameraRotationY: number, xpos: number, ypos: number, zpos: number, items: number[][], attackPos: number, players: StoredPlayer[], character: WebGLTexture, weapons: Weapon[], frame: number, inventory: Weapon[], shaderProgram: WebGLProgram, armour: WebGLTexture[]) {
     gl.clearColor(0.8, 0.9, 1.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -65,7 +65,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
         Mat4.copy(modelViewMatrix, initialMatrix);
-        bindTexture(gl, armour, false, shaderProgram);
+        bindTexture(gl, armour[players[i].inventory[1].rarity], false, shaderProgram);
         Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x, players[i].z - 2, players[i].y]);
         Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].rotation, [0, 1, 0]);
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
@@ -83,7 +83,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
     
     
     const fixedModelViewMatrix = Mat4.create();
-    bindTexture(gl, weapontextures[currentweapon[0]][currentweapon[1]], false, shaderProgram)
+    bindTexture(gl, weapontextures[inventory[0].type][inventory[0].rarity], false, shaderProgram)
     Mat4.translate(fixedModelViewMatrix, fixedModelViewMatrix, [-1, 0, -1]);
     Mat4.rotate(fixedModelViewMatrix, fixedModelViewMatrix, attackPos * 4, [1, 0, 0])
     setNormalAttribute(gl, buffers, programInfo) 
