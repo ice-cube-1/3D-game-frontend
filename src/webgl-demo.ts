@@ -207,10 +207,20 @@ function main() {
     const fsSource = `
         varying highp vec2 vTextureCoord;
         varying highp vec3 vLighting;
-        uniform sampler2D uSampler;
+
+        uniform sampler2D uSampler;           // Primary texture sampler
+        uniform sampler2D uSecondSampler;     // Secondary texture sampler
+        uniform bool uUseSecondTexture;       // Flag to determine if second texture should be used
+
         void main(void) {
-        highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
-        gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+            highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
+            
+            if (uUseSecondTexture) {
+                highp vec4 secondTexelColor = texture2D(uSecondSampler, vTextureCoord);
+                texelColor = mix(texelColor, secondTexelColor, secondTexelColor.a);
+            }
+            
+            gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
         }
     `;
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource) as WebGLProgram;
@@ -291,7 +301,7 @@ function main() {
         frame += 1;
         send(player.id+": position: "+player.x+", "+player.y+", "+player.z+", "+player.rotation+", "+player.weaponPos)
         player.rotation = mousePos.x*4
-        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, blocks, player.weaponPos, players, character, weapons, frame,  [player.inventory[0].type,player.inventory[0].rarity]);
+        drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, blocks, player.weaponPos, players, character, weapons, frame,  [player.inventory[0].type,player.inventory[0].rarity], shaderProgram);
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
@@ -424,9 +434,10 @@ function loadShader(gl: WebGLRenderingContext, type: number, source: string) {
     return shader;
 }
 
-function loadTexture(gl: WebGLRenderingContext, url: string) {
+export function loadTexture(gl: WebGLRenderingContext, url: string, blockColor?: Uint8Array) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
+
     const level = 0;
     const internalFormat = gl.RGBA;
     const width = 1;
@@ -434,23 +445,35 @@ function loadTexture(gl: WebGLRenderingContext, url: string) {
     const border = 0;
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
-    const pixel = new Uint8Array([0, 0, 255, 255]);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    // Use the provided block color or default to blue if not provided
+    const pixel = blockColor || new Uint8Array([255, 255, 255, 255]);
+
     gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
-    const image = new Image();
-    image.onload = () => {
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
-        if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
-            gl.generateMipmap(gl.TEXTURE_2D)
-        } else {
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        }
-    };
-    image.src = url;
+
+    if (!blockColor) {
+        const image = new Image();
+        image.onload = () => {
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
+
+            if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+                gl.generateMipmap(gl.TEXTURE_2D);
+            } else {
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            }
+        };
+        image.src = url;
+    } else {       
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
+
     return texture;
 }
 
