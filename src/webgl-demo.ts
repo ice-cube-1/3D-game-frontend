@@ -26,6 +26,7 @@ export type Player = {
     inventory: Weapon[];
     hp: number;
     name: string;
+    color: number[];
 }
 
 export type StoredPlayer = {
@@ -38,6 +39,7 @@ export type StoredPlayer = {
     inventory: Weapon[];
     name: string;
     hp: number;
+    color: number[];
 }
 
 export type ProgramInfo = {
@@ -59,7 +61,7 @@ var blocks: number[][] = []
 var weapons: Weapon[] = []
 var players: StoredPlayer[] = []
 var messages: string[] = []
-var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0, type: 0},{coords: [0,0,0], rarity: 0, type: 3}], hp: 40, name: "unknown"}
+var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0, type: 0},{coords: [0,0,0], rarity: 0, type: 3}], hp: 40, name: "unknown", color: [Math.floor(Math.random()*256), Math.floor(Math.random()*256), Math.floor(Math.random()*256), 255]}
 var direction = ""
 const socket = new WebSocket(document.location.protocol + '//' + document.domain + ':' + location.port + '/socket');
 socket.addEventListener("message", (toUpdate) => {
@@ -89,7 +91,7 @@ socket.addEventListener("message", (toUpdate) => {
         case "blocks":
             blocks.push(content.split(", ").map(item => Number(item))); break;
         case "playerStats":
-            players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[], name:"unknown", hp: 40})
+            players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[], name:"unknown", hp: 40, color: [100,100,100,255]})
             var stats = content.split(" - ")
             for (const i of stats) {
                 [type,content] = i.split(":")
@@ -108,14 +110,21 @@ socket.addEventListener("message", (toUpdate) => {
                         break;
                     case "name":
                         players[idxFromID(id)].name = content
+                        break;
                     case "hp":
                         players[idxFromID(id)].hp = Number(content)
+                        break;
+                    case "color":
+                        console.log(content.split(", ").map(item => Number(item)))
+                        players[idxFromID(id)].color = content.split(", ").map(item => Number(item))
+                        break;
                 }
                 console.log(players[idxFromID(id)].inventory)
             }
             break;
         case "id":
             player.id = id;
+            send(player.id+": color: "+player.color.join(", "))
             break;
         case "zspeed":
             player.zspeed+=Number(content)
@@ -144,17 +153,18 @@ socket.addEventListener("message", (toUpdate) => {
                 player.inventory = players[playeridx].inventory
                 player.name = players[playeridx].name
                 player.id = players[playeridx].id
+                player.color = players[playeridx].color
                 players.splice(playeridx)
                 messages.push("You have logged in as "+player.name)
                 send(player.name+"has logged in")
             }
             break;
         case "hp":
-            player.hp=Number(content)
-            if (player.hp == 40) {
+            if (player.hp <20 && content == "40") {
                 player.x = Math.floor(Math.random()*80)-40;
                 player.y = Math.floor(Math.random()*80)-40;
             }
+            player.hp=Number(content)
             break;
         case "moveItem":
             const [oldcoords,newcoords] = content.split(" - ").map(i => i.split(", ").map(j => Number(j)))
@@ -166,6 +176,8 @@ socket.addEventListener("message", (toUpdate) => {
             break;
         case "namechange":
             players[idxFromID(id)].name = content;
+        case "color":
+            players[idxFromID(id)].color = content.split(", ").map(item => Number(item))
     }
 });
 
@@ -370,6 +382,11 @@ function main() {
                 var message: string = messages[messages.length - 1]
                 if (message.startsWith("/login ")) {
                     send(player.id+": login: "+message.slice(7))
+                } else if (message.startsWith("/setcolor ")) {
+                    player.color = message.slice(10).split(", ").map(item => Number(item))
+                    player.color.push(255)
+                    send(player.id+": color: "+message.slice(10)+", 255")
+                    messages.push("Your colour has been changed")
                 }
                 else {
                     messages[messages.length - 1] = player.name + " - " + message;

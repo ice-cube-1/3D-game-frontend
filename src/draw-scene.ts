@@ -50,14 +50,14 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
         bindTexture(gl, weapontextures[weapons[i].type][weapons[i].rarity], false, shaderProgram);
         Mat4.translate(modelViewMatrix, modelViewMatrix, weapons[i].coords)
         Mat4.rotate(modelViewMatrix, modelViewMatrix, frame/50, [0,1,0])
-        Mat4.scale(modelViewMatrix, modelViewMatrix, [0.005, 0.5, 0.5])
+        Mat4.scale(modelViewMatrix, modelViewMatrix, [0.005, 1, 1])
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
         Mat4.copy(modelViewMatrix, initialMatrix);
     }
     for (let i = 0; i < players.length; i++) {
         const initialMatrix = Mat4.clone(modelViewMatrix);
-        var blockcolor = loadTexture(gl, "", new Uint8Array([255, 0, 0, 255]));
+        var blockcolor = loadTexture(gl, "", new Uint8Array(players[i].color));
         bindTexture(gl, blockcolor, character, shaderProgram);
         Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x, players[i].z - 2, players[i].y]);
         Mat4.scale(modelViewMatrix, modelViewMatrix, [1 / 1.2, 2, 1 / 1.2]);
