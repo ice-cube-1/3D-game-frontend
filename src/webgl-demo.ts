@@ -61,7 +61,7 @@ var blocks: number[][] = []
 var weapons: Weapon[] = []
 var players: StoredPlayer[] = []
 var messages: string[] = []
-var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 6, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0, type: 0},{coords: [0,0,0], rarity: 0, type: 3}], hp: 40, name: "unknown", color: [Math.floor(Math.random()*256), Math.floor(Math.random()*256), Math.floor(Math.random()*256), 255]}
+var player: Player = {id: -1, x: Math.floor(Math.random()*80)-40, y: Math.floor(Math.random()*80)-40, z: 20, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{coords: [0,0,0], rarity: 0, type: 0},{coords: [0,0,0], rarity: 0, type: 3}], hp: 40, name: "unknown", color: [Math.floor(Math.random()*256), Math.floor(Math.random()*256), Math.floor(Math.random()*256), 255]}
 var direction = ""
 const socket = new WebSocket(document.location.protocol + '//' + document.domain + ':' + location.port + '/socket');
 socket.addEventListener("message", (toUpdate) => {
@@ -232,7 +232,7 @@ function main() {
                 texelColor = mix(texelColor, secondTexelColor, secondTexelColor.a);
             }
             
-            gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+            gl_FragColor = vec4(texelColor.rgb * vLighting *texelColor.a, texelColor.a);
         }
     `;
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource) as WebGLProgram;
