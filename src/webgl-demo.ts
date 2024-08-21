@@ -266,9 +266,14 @@ function main() {
     }
     const character = loadTexture(gl, "character.png") as WebGLTexture
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    function render() {
+    let then = 0;
+    function render(now: number) {
+        now*=0.001
+        const deltaTime = now - then;       
+        then = now;                 
+        const fps = 1 / deltaTime;             
         const coords = document.getElementById("coordinates") as HTMLElement
-        coords.textContent = `X: ${player.x.toFixed(2)}, Y: ${player.y.toFixed(2)}, Z: ${((player.z - 5) / 2).toFixed(2)}, HP: ${player.hp}`;
+        coords.textContent = `X: ${player.x.toFixed(2)}, Y: ${player.y.toFixed(2)}, Z: ${((player.z - 5) / 2).toFixed(2)}, HP: ${player.hp}, FPS: ${fps.toFixed(1)}`;
         const chat = document.getElementById("chat") as HTMLElement;
         chat.innerHTML = messages.join("<br/>");
         const info = document.getElementById("playerinfo") as HTMLElement;
@@ -282,8 +287,8 @@ function main() {
         } else {
             player.z = Math.ceil(player.z)
         }
-        let rightVector = { x: Math.cos(mousePos.x * 4) * 0.2, y: Math.sin(mousePos.x * 4) * 0.2 };
-        let forwardVector = { x: -Math.sin(mousePos.x * 4) * 0.2, y: Math.cos(mousePos.x * 4) * 0.2 };
+        let rightVector = { x: Math.cos(mousePos.x * 4) * 0.2 * (30/fps), y: Math.sin(mousePos.x * 4) * 0.2 * (30/fps) };
+        let forwardVector = { x: -Math.sin(mousePos.x * 4) * 0.2 * (30/fps), y: Math.cos(mousePos.x * 4) * 0.2 *(30/fps) };
         var tempX = player.x;
         var tempY = player.y;
         switch (direction) {
@@ -308,13 +313,13 @@ function main() {
             player.x = tempX;
             player.y = tempY
         }
-        player.weaponPos -= player.attackSpeed*speedMultiplier[player.inventory[0].type]
+        player.weaponPos -= player.attackSpeed*speedMultiplier[player.inventory[0].type] *(30/fps)
         if (player.weaponPos <= 0.7) {
             player.weaponPos = 1.6;
             player.attackSpeed = 0;
         }
-        gravity()
-        frame += 1;
+        gravity(fps)
+        frame += 1 *(30/fps);
         send(player.id+": position: "+player.x+", "+player.y+", "+player.z+", "+player.rotation+", "+player.weaponPos)
         player.rotation = mousePos.x*4
         drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, blocks, player.weaponPos, players, character, weapons, frame,  player.inventory, shaderProgram, armourWearable);
@@ -510,12 +515,12 @@ function getMousePosition(event: MouseEvent, target: HTMLElement) {
     return { x, y };
 }
 
-function gravity() {
+function gravity(fps: number) {
     if (!checkNotCollision(player.x, player.y, Math.ceil(player.z - 5), Math.ceil(player.z - 5)) || !playerPlayerCollision(player.x, player.y, Math.ceil(player.z - 1))) {
         player.zspeed = 0;
         player.z = Math.ceil(player.z);
     } else {
-        player.zspeed -= 0.08;
+        player.zspeed -= 0.08 *(30/fps);
     }
 }
 
