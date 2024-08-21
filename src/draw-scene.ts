@@ -72,8 +72,8 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
         Mat4.copy(modelViewMatrix, initialMatrix);
         bindTexture(gl, weapontextures[players[i].inventory[0].type][players[i].inventory[0].rarity], false, shaderProgram);
-        Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x - 1, players[i].z - 2, players[i].y - 1]);
-        Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].weaponPos * 4, [1, 0, 0]);
+        Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x + 1, players[i].z - 1, players[i].y - 1]);
+        Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].weaponPos * 2, [-1, 0, 0]);
         setNormalAttribute(gl, buffers, programInfo);
         Mat4.scale(modelViewMatrix, modelViewMatrix, [0.01, 1, 0.2]);
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
@@ -84,14 +84,12 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
     
     const fixedModelViewMatrix = Mat4.create();
     bindTexture(gl, weapontextures[inventory[0].type][inventory[0].rarity], false, shaderProgram)
-    Mat4.translate(fixedModelViewMatrix, fixedModelViewMatrix, [-1, 0, -1]);
-    Mat4.rotate(fixedModelViewMatrix, fixedModelViewMatrix, attackPos * 4, [1, 0, 0])
+    Mat4.translate(fixedModelViewMatrix, fixedModelViewMatrix, [1, -1, -1]);
+    Mat4.rotate(fixedModelViewMatrix, fixedModelViewMatrix, (attackPos) * 2, [-1, 0, 0])
     setNormalAttribute(gl, buffers, programInfo) 
-    Mat4.scale(fixedModelViewMatrix, fixedModelViewMatrix, [0.01, 1, 0.2]);
+    Mat4.scale(fixedModelViewMatrix, fixedModelViewMatrix, [0.01, 1, 1]);
     gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, fixedModelViewMatrix);
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
-    Mat4.rotate(fixedModelViewMatrix, fixedModelViewMatrix, attackPos * 4, [-1, 0, 0])
-    Mat4.translate(fixedModelViewMatrix, fixedModelViewMatrix, [1, 0, 1]);
 }
 
 function setPositionAttribute(gl: any, buffers: any, programInfo: any) {

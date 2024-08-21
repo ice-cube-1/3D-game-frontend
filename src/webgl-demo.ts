@@ -314,8 +314,8 @@ function main() {
             player.y = tempY
         }
         player.weaponPos -= player.attackSpeed*speedMultiplier[player.inventory[0].type] *(30/fps)
-        if (player.weaponPos <= 0.7) {
-            player.weaponPos = 1.6;
+        if (player.weaponPos <= 0) {
+            player.weaponPos = 1;
             player.attackSpeed = 0;
         }
         gravity(fps)
