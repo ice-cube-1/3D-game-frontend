@@ -4,7 +4,6 @@
 <head>
   <meta charset="utf-8" />
   <title>WebGL Demo</title>
-  <!-- <script src="gl-matrix-min.js"></script> -->
   <script src="js/jquery-3.2.1.min.js"></script> 
   <script src="js/webgl-demo.js" type="module"></script>
   <style>
@@ -31,6 +30,14 @@
       left: 1400px;
       color: white;
     }
+    #about-link {
+      position: absolute;
+      color:black;
+      left: 20px;
+      top: 1100px; /* Position below the canvas */
+      padding: 10px;
+      border-radius: 5px;
+    }
   </style>
 
 </head>
@@ -40,6 +47,7 @@
   <div id="coordinates">Hello, WebGL!</div>
   <div id="chat">Hi</div>
   <div id="playerinfo">Some info</div>
-</body>
-
+  <div id="about-link">
+    <a href="about.html">Help / About</a>
+  </div>
 </html>
