@@ -56,7 +56,32 @@ export type ProgramInfo = {
         uSampler: WebGLUniformLocation | null;
     };
 }
+var hasLock = false
+let mousePos = { x: 0, y: 0 };
 
+function pointerLockChange() {
+    if(document.pointerLockElement === null) {
+            hasLock = false;
+    } else if(document.pointerLockElement === document.body){
+        hasLock = true;
+    }
+}
+function handleMouseMove(event: any) {
+    mousePos.x += event.movementX/500;
+    if (Math.abs(mousePos.y+(event.movementY)/500) <=1) {
+        mousePos.y += event.movementY/500;
+
+    }
+    console.log(mousePos.x, mousePos.y)
+}
+function handleMouseDown(event: any) {
+    console.log('Mouse down event triggered');
+    console.log('Mouse button:', event.button);
+    console.log('Mouse position:', event.clientX, event.clientY);
+    if(!hasLock) {
+        document.body.requestPointerLock();
+    }
+}
 var blocks: number[][] = []
 var weapons: Weapon[] = []
 var players: StoredPlayer[] = []
@@ -192,6 +217,9 @@ const ranges = [1,2,1.5]
 
 main();
 function main() {
+    document.onmousemove = handleMouseMove;
+    document.onpointerlockchange = pointerLockChange;
+    document.onmousedown = handleMouseDown;
     const canvas = document.querySelector("#glcanvas") as HTMLCanvasElement;
     const gl = canvas.getContext("webgl") as WebGLRenderingContext;
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -326,11 +354,6 @@ function main() {
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
-    let mousePos = { x: 0, y: 0 };
-    canvas.addEventListener('mousemove', (e) => {
-        const pos = getMousePosition(e, canvas);
-        mousePos = pos;
-    });
     addEventListener("click", (event) => {
         if (player.attackSpeed == 0) {
             player.attackSpeed = 0.02
@@ -505,14 +528,6 @@ export function loadTexture(gl: WebGLRenderingContext, url: string, blockColor?:
 
 function isPowerOf2(value: number) {
     return (value & (value - 1)) === 0;
-}
-
-function getMousePosition(event: MouseEvent, target: HTMLElement) {
-    target = target || event.target;
-    const rect = target.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width * 2 - 1;
-    const y = (event.clientY - rect.top) / rect.height * 2 - 1;
-    return { x, y };
 }
 
 function gravity(fps: number) {
