@@ -158,7 +158,7 @@ socket.addEventListener("message", (toUpdate) => {
                 player.name = newplayer.name;
                 players.splice(players.length-1)
                 messages.push("You have logged in as "+player.name)
-                send("0: message: "+player.name+"has logged in")
+                send("0: message: "+player.name+" has logged in")
             }
             break;
         case "id":
@@ -318,7 +318,7 @@ function main() {
         }
         info.innerHTML = playerinfo.join("<br/>");
         if (player.zspeed != 0) {
-            player.z += player.zspeed / 10
+            player.z += player.zspeed / 10 * 0.5 * (30/fps)
         } else {
             player.z = Math.ceil(player.z)
         }
@@ -344,7 +344,7 @@ function main() {
                 tempY -= rightVector.y;
                 break;
         }
-        if (checkNotCollision(tempX, tempY, player.z - 4, player.z) && playerPlayerCollision(tempX, tempY, player.z)) {
+        if (checkNotCollision(tempX, tempY, player.z - 4, player.z) && playerPlayerCollision(tempX, tempY, player.z) && Math.abs(tempY)<=100 && Math.abs(tempX) <=100) {
             player.x = tempX;
             player.y = tempY
         }
@@ -363,7 +363,7 @@ function main() {
     requestAnimationFrame(render);
     addEventListener("click", (event) => {
         if (player.attackSpeed == 0) {
-            player.attackSpeed = 0.02
+            player.attackSpeed = 0.05
             send(player.id+": weaponPos: "+player.weaponPos)
             for (var i = 0; i < players.length; i++) {
                 let forwardVector = { x: -Math.sin(mousePos.x * 4), y: Math.cos(mousePos.x * 4) };
@@ -408,7 +408,7 @@ function main() {
                 case 69: interact(); break;
                 case 32: // space
                     if (player.zspeed == 0) {
-                        player.zspeed = 2
+                        player.zspeed = 4
                     }
                     break;
             }
@@ -542,7 +542,7 @@ function gravity(fps: number) {
         player.zspeed = 0;
         player.z = Math.ceil(player.z);
     } else {
-        player.zspeed -= 0.08 *(30/fps);
+        player.zspeed -= 0.15 *(30/fps);
     }
 }
 
