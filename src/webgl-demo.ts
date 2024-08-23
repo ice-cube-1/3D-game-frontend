@@ -72,12 +72,8 @@ function handleMouseMove(event: any) {
         mousePos.y += event.movementY/500;
 
     }
-    console.log(mousePos.x, mousePos.y)
 }
 function handleMouseDown(event: any) {
-    console.log('Mouse down event triggered');
-    console.log('Mouse button:', event.button);
-    console.log('Mouse position:', event.clientX, event.clientY);
     if(!hasLock) {
         document.body.requestPointerLock();
     }
@@ -92,6 +88,7 @@ const socket = new WebSocket(document.location.protocol + '//' + document.domain
 socket.addEventListener("message", (toUpdate) => {
     var [idstr, type,content]: string[] = toUpdate.data.split(": ",3)
     var id = Number(idstr)
+    var idx = idxFromID(id)
     switch (type) {
         case "message":
             if (chatFocussed) {
@@ -101,50 +98,67 @@ socket.addEventListener("message", (toUpdate) => {
             }
             break;
         case "position":
-            splitPos(content,id)
+            splitPos(content,idx)
             break;
         case "weaponPickup":
             const [pickedUp, dropped]: number[][] = content.split(" - ").map(item => item.split(", ").map(num => Number(num)));
             weapons = weapons.filter(weapon => !(weapon.coords[0] === pickedUp[0] && weapon.coords[1] === pickedUp[1] && weapon.coords[2] === pickedUp[2]));
             weapons.push({coords: dropped.slice(0,3), rarity: dropped[3], type: dropped[4]})
             if (dropped[4] == 3) {
-                players[idxFromID(id)].inventory[1] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3], type: pickedUp[4]}
+                players[idx].inventory[1] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3], type: pickedUp[4]}
             } else {
-                players[idxFromID(id)].inventory[0] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3], type: pickedUp[4]}
+                players[idx].inventory[0] = {coords: pickedUp.slice(0,3), rarity: pickedUp[3], type: pickedUp[4]}
             }
             break;
         case "blocks":
             blocks.push(content.split(", ").map(item => Number(item))); break;
         case "playerStats":
-            players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[], name:"unknown", hp: 40, color: [100,100,100,255]})
+            players.push({id:id,x:0,y:0,z:0,rotation:0,weaponPos:0,inventory:[{coords:[0,0,0], rarity:0, type:0},{coords:[0,0,0], rarity:0, type:0}], name:"unknown", hp: 40, color: [100,100,100,255]})
+            var idx = idxFromID(id)
             var stats = content.split(" - ")
             for (const i of stats) {
                 [type,content] = i.split(":")
+                console.log(idx)
+                console.log(players[idx]+type)
                 switch (type) {
                     case "position": 
-                        splitPos(content, id); 
+                        splitPos(content, idx); 
                         break;
                     case "weaponChoice": 
                         var weapon = content.split(", ").map(item => Number(item))
                         if (weapon[4] == 3) {
-                            players[idxFromID(id)].inventory[1] = {coords: weapon.slice(0,3), rarity: weapon[3], type: weapon[4]}
-
+                            console.log(players[idx])
+                            players[idx].inventory[1] = {coords: weapon.slice(0,3), rarity: weapon[3], type: weapon[4]}
                         } else {
-                            players[idxFromID(id)].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3], type: weapon[4]}
+                            console.log(players[idx])
+                            players[idx].inventory[0] = {coords: weapon.slice(0,3), rarity: weapon[3], type: weapon[4]}
                         }
                         break;
                     case "name":
-                        players[idxFromID(id)].name = content
+                        players[idx].name = content
                         break;
                     case "hp":
-                        players[idxFromID(id)].hp = Number(content)
+                        players[idx].hp = Number(content)
                         break;
                     case "color":
                         console.log(content.split(", ").map(item => Number(item)))
-                        players[idxFromID(id)].color = content.split(", ").map(item => Number(item))
+                        players[idx].color = content.split(", ").map(item => Number(item))
                         break;
+                    
                 }
-                console.log(players[idxFromID(id)].inventory)
+            }
+            if (players.slice(players.length-1)[0].id == -1) {
+                var newplayer = players.slice(players.length-1)[0]
+                player.color = newplayer.color;
+                player.inventory = newplayer.inventory;
+                player.x = newplayer.x;
+                player.y = newplayer.y;
+                player.z = newplayer.z;
+                player.hp = newplayer.hp;
+                player.name = newplayer.name;
+                players.splice(players.length-1)
+                messages.push("You have logged in as "+player.name)
+                send("0: message: "+player.name+"has logged in")
             }
             break;
         case "id":
@@ -170,18 +184,6 @@ socket.addEventListener("message", (toUpdate) => {
                 const username = content.split(" ")[1]
                 player.name = username;
                 messages.push("Your account has been successfully created")
-            } else {
-                var playeridx = idxFromID(Number(content))
-                player.x = players[playeridx].x
-                player.y = players[playeridx].y
-                player.x = players[playeridx].z
-                player.inventory = players[playeridx].inventory
-                player.name = players[playeridx].name
-                player.id = players[playeridx].id
-                player.color = players[playeridx].color
-                players.splice(playeridx)
-                messages.push("You have logged in as "+player.name)
-                send(player.name+"has logged in")
             }
             break;
         case "hp":
@@ -200,9 +202,14 @@ socket.addEventListener("message", (toUpdate) => {
             }
             break;
         case "namechange":
-            players[idxFromID(id)].name = content;
+            players[idx].name = content;
+            break;
         case "color":
-            players[idxFromID(id)].color = content.split(", ").map(item => Number(item))
+            players[idx].color = content.split(", ").map(item => Number(item))
+            break;
+        case "remove":
+            players.splice(idx);
+            break;
     }
 });
 
@@ -574,15 +581,12 @@ function dotProduct(a: vec2d, b: vec2d) {
 }
 
 function splitPos(content: string, id: number) {
-    id = idxFromID(id)
-    if (id != -1) {
-        var position = content.split(", ").map(num => Number(num));
-        players[id].x = -position[0]
-        players[id].y = -position[1]
-        players[id].z = position[2]
-        players[id].rotation = position[3]
-        players[id].weaponPos = position[4]
-    }
+    var position = content.split(", ").map(num => Number(num));
+    players[id].x = position[0]
+    players[id].y = position[1]
+    players[id].z = position[2]
+    players[id].rotation = position[3]
+    players[id].weaponPos = position[4]
 }
 
 function idxFromID(id: number) {
@@ -591,7 +595,7 @@ function idxFromID(id: number) {
             return players.indexOf(player)
         }
     }
-    return -1
+    return 1000
 }
 function send(data: string) {
     if (socket.readyState === WebSocket.OPEN) {
