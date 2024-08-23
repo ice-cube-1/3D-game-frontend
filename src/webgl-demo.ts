@@ -99,6 +99,8 @@ socket.addEventListener("message", (toUpdate) => {
             break;
         case "position":
             splitPos(content,id)
+            players[idx].x *= -1;
+            players[idx].y *= -1;
             break;
         case "weaponPickup":
             const [pickedUp, dropped]: number[][] = content.split(" - ").map(item => item.split(", ").map(num => Number(num)));
@@ -584,8 +586,8 @@ function dotProduct(a: vec2d, b: vec2d) {
 function splitPos(content: string, id: number) {
     id = idxFromID(id)
     var position = content.split(", ").map(num => Number(num));
-    players[id].x = position[0]
-    players[id].y = position[1]
+    players[id].x = -position[0]
+    players[id].y = -position[1]
     players[id].z = position[2]
     players[id].rotation = position[3]
     players[id].weaponPos = position[4]
