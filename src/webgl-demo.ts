@@ -98,7 +98,7 @@ socket.addEventListener("message", (toUpdate) => {
             }
             break;
         case "position":
-            splitPos(content,idx)
+            splitPos(content,id)
             break;
         case "weaponPickup":
             const [pickedUp, dropped]: number[][] = content.split(" - ").map(item => item.split(", ").map(num => Number(num)));
@@ -122,7 +122,7 @@ socket.addEventListener("message", (toUpdate) => {
                 console.log(players[idx]+type)
                 switch (type) {
                     case "position": 
-                        splitPos(content, idx); 
+                        splitPos(content, id); 
                         break;
                     case "weaponChoice": 
                         var weapon = content.split(", ").map(item => Number(item))
@@ -355,7 +355,7 @@ function main() {
         }
         gravity(fps)
         frame += 1 *(30/fps);
-        send(player.id+": position: "+player.x+", "+player.y+", "+player.z+", "+player.rotation+", "+player.weaponPos)
+        send(player.id+": position: "+-player.x+", "+-player.y+", "+player.z+", "+player.rotation+", "+player.weaponPos)
         player.rotation = mousePos.x*4
         drawScene(gl, programInfo, buffers, floortexture, walltexture, weapontextures, mousePos.x, mousePos.y, player.x, player.y, player.z, blocks, player.weaponPos, players, character, weapons, frame,  player.inventory, shaderProgram, armourWearable);
         requestAnimationFrame(render);
@@ -422,8 +422,9 @@ function main() {
                     player.color.push(255)
                     send(player.id+": color: "+message.slice(10)+", 255")
                     messages.push("Your colour has been changed")
-                }
-                else {
+                } else if (message.startsWith("/help")) {
+                    window.location.href = 'about.html';
+                } else {
                     messages[messages.length - 1] = player.name + " - " + message;
                     send(player.id+": message: "+messages.slice(-1)[0])
                 }
@@ -581,6 +582,7 @@ function dotProduct(a: vec2d, b: vec2d) {
 }
 
 function splitPos(content: string, id: number) {
+    id = idxFromID(id)
     var position = content.split(", ").map(num => Number(num));
     players[id].x = position[0]
     players[id].y = position[1]
