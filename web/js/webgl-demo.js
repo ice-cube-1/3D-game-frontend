@@ -26,7 +26,7 @@ var blocks = [];
 var weapons = [];
 var players = [];
 var messages = [];
-var player = { id: -1, x: Math.floor(Math.random() * 80) - 40, y: Math.floor(Math.random() * 80) - 40, z: 20, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{ coords: [0, 0, 0], rarity: 0, type: 0 }, { coords: [0, 0, 0], rarity: 0, type: 3 }], hp: 40, name: "unknown", color: [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), 255] };
+var player = { id: -1, x: Math.floor(Math.random() * 80) - 40, y: Math.floor(Math.random() * 80) - 40, z: 20, rotation: 0, zspeed: 0, weaponPos: 0, attackSpeed: 0, inventory: [{ coords: [0, 0, 0], rarity: 0, type: 0 }, { coords: [0, 0, 0], rarity: 0, type: 3 }], hp: 40, name: "unknown", color: [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), 255], kills: 0 };
 var direction = "";
 const socket = new WebSocket(document.location.protocol + '//' + document.domain + ':' + location.port + '/socket');
 socket.addEventListener("message", (toUpdate) => {
@@ -62,7 +62,7 @@ socket.addEventListener("message", (toUpdate) => {
             blocks.push(content.split(", ").map(item => Number(item)));
             break;
         case "playerStats":
-            players.push({ id: id, x: 0, y: 0, z: 0, rotation: 0, weaponPos: 0, inventory: [{ coords: [0, 0, 0], rarity: 0, type: 0 }, { coords: [0, 0, 0], rarity: 0, type: 0 }], name: "unknown", hp: 40, color: [100, 100, 100, 255] });
+            players.push({ id: id, x: 0, y: 0, z: 0, rotation: 0, weaponPos: 0, inventory: [{ coords: [0, 0, 0], rarity: 0, type: 0 }, { coords: [0, 0, 0], rarity: 0, type: 0 }], name: "unknown", hp: 40, color: [100, 100, 100, 255], kills: 0 });
             var idx = idxFromID(id);
             var stats = content.split(" - ");
             for (const i of stats) {
@@ -94,6 +94,9 @@ socket.addEventListener("message", (toUpdate) => {
                         console.log(content.split(", ").map(item => Number(item)));
                         players[idx].color = content.split(", ").map(item => Number(item));
                         break;
+                    case "kills":
+                        players[idx].kills = Number(content);
+                        break;
                 }
             }
             if (players.slice(players.length - 1)[0].id == -1) {
@@ -105,6 +108,7 @@ socket.addEventListener("message", (toUpdate) => {
                 player.z = newplayer.z;
                 player.hp = newplayer.hp;
                 player.name = newplayer.name;
+                player.kills = newplayer.kills;
                 players.splice(players.length - 1);
                 messages.push("You have logged in as " + player.name);
                 send("0: message: " + player.name + " has logged in");
@@ -115,14 +119,16 @@ socket.addEventListener("message", (toUpdate) => {
             send(player.id + ": color: " + player.color.join(", "));
             break;
         case "zspeed":
-            player.zspeed += Number(content);
+            if (idx == -1) {
+                player.zspeed += Number(content);
+            }
             break;
         case "weapon":
             const toplace = content.split(",").map(num => Number(num));
             weapons.push({ coords: toplace.slice(0, 3), rarity: toplace[3], type: toplace[4] });
             break;
         case "weaponPos":
-            players[id].weaponPos = Number(content);
+            players[idx].weaponPos = Number(content);
             break;
         case "login":
             if (content == 'incorrect password') {
@@ -138,11 +144,16 @@ socket.addEventListener("message", (toUpdate) => {
             }
             break;
         case "hp":
-            if (player.hp < 20 && content == "40") {
-                player.x = Math.floor(Math.random() * 80) - 40;
-                player.y = Math.floor(Math.random() * 80) - 40;
+            if (idx == -1) {
+                if (player.hp < 20 && content == "40") {
+                    player.x = Math.floor(Math.random() * 80) - 40;
+                    player.y = Math.floor(Math.random() * 80) - 40;
+                }
+                player.hp = Number(content);
             }
-            player.hp = Number(content);
+            else {
+                players[idx].hp = Number(content);
+            }
             break;
         case "moveItem":
             const [oldcoords, newcoords] = content.split(" - ").map(i => i.split(", ").map(j => Number(j)));
@@ -160,6 +171,9 @@ socket.addEventListener("message", (toUpdate) => {
             break;
         case "remove":
             players.splice(idx);
+            break;
+        case "kills":
+            players[idx].kills = Number(content);
             break;
     }
 });
@@ -260,9 +274,9 @@ function main() {
         const chat = document.getElementById("chat");
         chat.innerHTML = messages.join("<br/>");
         const info = document.getElementById("playerinfo");
-        var playerinfo = [player.name + ": " + player.hp + "/40"];
+        var playerinfo = [player.name + ": " + player.hp + "/40, " + player.kills + " kills"];
         for (i = 0; i < players.length; i++) {
-            playerinfo.push(players[i].name + ": " + players[i].hp + "/40");
+            playerinfo.push(players[i].name + ": " + players[i].hp + "/40, " + players[i].kills + " kills");
         }
         info.innerHTML = playerinfo.join("<br/>");
         if (player.zspeed != 0) {
@@ -329,9 +343,11 @@ function main() {
                     players[i].hp -= Math.round((player.inventory[0].rarity + 1) * typeMultiplier[player.inventory[0].type] / ((1 + players[i].inventory[1].rarity)));
                     console.log(1 + players[i].inventory[1].rarity);
                     if (players[i].hp <= 0) {
-                        players[i].inventory = [{ coords: [0, 0, 0], rarity: 0, type: 0 }];
+                        players[i].inventory = [{ coords: [0, 0, 0], rarity: 0, type: 0 }, { coords: [0, 0, 0], rarity: 0, type: 0 }];
                         messages.push(players[i].name + " has been killed by " + player.name);
                         send(player.name + ": message: " + players[i].name + " has been killed by " + player.name);
+                        player.kills++;
+                        send(player.id + ": kills: " + player.kills);
                         players[i].hp = 40;
                     }
                     send(players[i].id + ": position: " + players[i].x + ", " + players[i].y + ", " + players[i].z + ", " + players[i].rotation + ", " + players[i].weaponPos);
@@ -562,7 +578,7 @@ function idxFromID(id) {
             return players.indexOf(player);
         }
     }
-    return 1000;
+    return -1;
 }
 function send(data) {
     if (socket.readyState === WebSocket.OPEN) {
