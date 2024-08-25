@@ -324,7 +324,7 @@ function main() {
         then = now;                 
         const fps = 1 / deltaTime;             
         const coords = document.getElementById("coordinates") as HTMLElement
-        coords.textContent = `X: ${player.x.toFixed(2)}, Y: ${player.y.toFixed(2)}, Z: ${((player.z - 5) / 2).toFixed(2)}, HP: ${player.hp}, FPS: ${fps.toFixed(1)}`;
+        coords.textContent = `X: ${player.x.toFixed(0)}, Y: ${player.y.toFixed(0)}, Z: ${((player.z - 5) / 2).toFixed(0)}, HP: ${player.hp}`;
         const chat = document.getElementById("chat") as HTMLElement;
         chat.innerHTML = messages.join("<br/>");
         const info = document.getElementById("playerinfo") as HTMLElement;
