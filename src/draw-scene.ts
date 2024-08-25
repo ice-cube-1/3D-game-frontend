@@ -72,6 +72,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
         Mat4.copy(modelViewMatrix, initialMatrix);
         bindTexture(gl, weapontextures[players[i].inventory[0].type][players[i].inventory[0].rarity], false, shaderProgram);
+        Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].rotation, [0, 1, 0]);
         Mat4.translate(modelViewMatrix, modelViewMatrix, [players[i].x + 1, players[i].z - 1, players[i].y - 1]);
         Mat4.rotate(modelViewMatrix, modelViewMatrix, players[i].weaponPos * 2, [-1, 0, 0]);
         setNormalAttribute(gl, buffers, programInfo);

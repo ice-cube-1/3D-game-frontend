@@ -584,7 +584,7 @@ function interact() {
             send(player.id+": weaponPickup: "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+storedrarity+", "+storedtype+" - "+weapons[i].coords[0]+", "+weapons[i].coords[1]+", "+weapons[i].coords[2]+", "+player.inventory[change].rarity+", "+player.inventory[change].type)
             player.inventory[change].rarity = storedrarity
             player.inventory[change].type = storedtype
-            messages.push(`Picked up an ${rarities[storedrarity]} ${itemtypes[storedtype]}!`)
+            messages.push(`Picked up ${rarities[storedrarity]} ${itemtypes[storedtype]}!`)
             return;
         }
     }
