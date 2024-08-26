@@ -142,6 +142,9 @@ socket.addEventListener("message", (toUpdate) => {
                 player.name = username;
                 messages.push("Your account has been successfully created");
             }
+            else if (content == 'no password') {
+                messages.push("Please enter a password");
+            }
             break;
         case "hp":
             if (idx == -1) {
@@ -170,7 +173,7 @@ socket.addEventListener("message", (toUpdate) => {
             players[idx].color = content.split(", ").map(item => Number(item));
             break;
         case "remove":
-            players.splice(idx);
+            players.splice(idx, 1);
             break;
         case "kills":
             players[idx].kills = Number(content);
